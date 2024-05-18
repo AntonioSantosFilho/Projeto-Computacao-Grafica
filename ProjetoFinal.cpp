@@ -7,7 +7,7 @@
 GLfloat tx = 0, ty = 0, win = 25;
 GLfloat dx=6, dy=0;
 GLfloat ix=4, iy=2;
-int cont = 1, citem=0, colide=0, dist=0;
+int cont_time = 1, cont_m=1, cont_item=0, colide=0, dist=0, life_mosquito=2, life_player=3, aux_cont_mosquito = 1;
 float tam = 2.0; // tamanho do jogador
 float n = 28, m = 20, velocidade = 2.0;
 int randomx=20, randomy=20;
@@ -17,33 +17,32 @@ void desenha() {
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
 
-//	if (cont != 10){
 	// Gota - Jogador
-	    glPushMatrix();
-	    glTranslatef(tx, ty, 0.0f);
-	    glBegin(GL_QUADS);
-	        glColor3f(0.0, 1.0, 1.0);
-	        glVertex2f(-tam/2, -tam/2);
-	        glVertex2f(tam/2, -tam/2);
-	        glVertex2f(tam/2, tam/2);
-	        glVertex2f(-tam/2, tam/2);
-	    glEnd();
-	    glPopMatrix();
+	glPushMatrix();
+	glTranslatef(tx, ty, 0.0f);
+	glBegin(GL_QUADS);
+	    glColor3f(0.0, 1.0, 1.0);
+	    glVertex2f(-tam/2, -tam/2);
+	    glVertex2f(tam/2, -tam/2);
+	    glVertex2f(tam/2, tam/2);
+	    glVertex2f(-tam/2, tam/2);
+	glEnd();
+	glPopMatrix();
 	    
 	// Triangulo - Mosquito
-	    glPushMatrix();
-	    glTranslatef(dx, dy, 0.0f); 
-	    glBegin(GL_TRIANGLES);
-	        glColor3f(0.0, 0.0, 0.0);
-	        glVertex2f(-tam/2, -tam/2);
-	        glVertex2f(tam/2, -tam/2);
-	        glVertex2f(0.0, tam/2);
-	    glEnd();
-	    glPopMatrix();
-	    
-//	}
+	glPushMatrix();
+	glTranslatef(dx, dy, 0.0f); 
+	glBegin(GL_TRIANGLES);
+	    glColor3f(0.0, 0.0, 0.0);
+	    glVertex2f(-tam/2, -tam/2);
+	    glVertex2f(tam/2, -tam/2);
+	    glVertex2f(0.0, tam/2);
+	glEnd();
+	glPopMatrix();
+	
+	
+	//Item - Objeto
     if (colide == 0){
-    //Item - Objeto
 	    glPushMatrix();
 	    glTranslatef(ix,iy,0.0f);
 	    glBegin(GL_QUADS);
@@ -61,32 +60,52 @@ void desenha() {
 void inicializa(){
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
+void colisao(){
+	// Colisao com o Item
+ 	dist = sqrt(pow(tx - ix, 2) + pow(ty - iy, 2));
+    if (dist < tam && colide == 0) {
+    	colide = 1;
+    	cont_item += 1;
+    	printf("%d", cont_item);
+    	cont_time = 1;
+        glutPostRedisplay();
+    }
+
+    // Colisao com o mosquito
+    dist = sqrt(pow(tx - dx, 2) + pow (ty - dy, 2));
+    if (dist < tam ) {
+    	life_player --;
+    	if (life_player == 0)exit(0);
+    }
+}
 
 void teclado(unsigned char key, int x, int y){
 	switch(key){
 		case 'a':	
 			if (tx < -n-1) tx =  -n-1;
 			tx -= 1;
-			
+			colisao();
 		break;
 		
 		case 'd':
 			
 			if (tx > n+1) tx = n+1;
 			tx += 1;
+			colisao();
 		break;
 		
 		case 'w':
 			
     		if (ty > m +tam) ty = m + tam;
-			ty += 1;	
+			ty += 1;
+			colisao();
 		break;
 
 		case 's':
 			
     		if (ty < -m -tam) ty = -tam -m;
     		ty -= 1;
-    		
+    		colisao();
 		break;
 		
 		case 'i':
@@ -117,38 +136,23 @@ void timer(int value) {
         dy += velocidade;
     else if (dy > ty)
         dy -= velocidade;
-
-    if (ty == dy){
-    	if (tx == dx){
-    		exit(0);
-		}
-		if (tx == dx-1){
-			exit(0);
-		}
-	}
-// Que comece a capturar agua
-
- 	dist = sqrt(pow(tx - ix, 2) + pow(ty - iy, 2));
-    if (dist < tam && colide == 0) {
-    	colide = 1;
-    	citem += 1;
-    	printf("%d", citem);
-    	cont = 1;
-        glutPostRedisplay();
-    }	
 	
-	else{
-		if (cont == 10){
-			srand(time(NULL)); // Inicializa a semente randômica com o tempo atual
-            ix = rand() % (2 * randomx + 1) - randomx; // Randomiza ix entre -n e n
-            iy = rand() % (2 * randomy + 1) - randomy; // Randomiza iy entre -m e m
-			colide = 0;
-			glutDisplayFunc(desenha);
-		}
-		cont++;
+// Spawnando outro item a cada 5 segundos
+	if (cont_time == 10){
+		srand(time(NULL)); // Inicializa a semente randômica com o tempo atual
+        ix = rand() % (2 * randomx + 1) - randomx; // Randomiza ix entre -n e n
+        iy = rand() % (2 * randomy + 1) - randomy; // Randomiza iy entre -m e m
+		colide = 0;
+		glutDisplayFunc(desenha);
 	}
-	
-// Que comece a spawnar
+	cont_time++;
+// Spawnando mosquito após o jogador possuir 5 itens
+
+	if (cont_item == 5*aux_cont_mosquito){
+		aux_cont_mosquito++;
+		srand(time(NULL));
+		printf ("Outro mosquito");
+	}
 
     glutPostRedisplay();
     glutTimerFunc(500, timer, 0); // Define o temporizador para chamar a função novamente após 0.5 segundos
