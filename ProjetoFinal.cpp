@@ -120,12 +120,11 @@ void teclado(unsigned char key, int x, int y){
 		break;
 	}
 	
-	glutPostRedisplay();	
-		 
+	glutPostRedisplay();	 
 }
 
 void timer(int value) {
-// Que comece a perseguicao
+// Mosquito persegue o jogador
 	
     if (dx < tx)
         dx += velocidade;
