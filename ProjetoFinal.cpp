@@ -5,23 +5,31 @@
 #include <time.h>
 
 #define Max_mosquitoes 10
-
-GLfloat tx = -4, ty = 0;
 int win = 25;
 //GLfloat dx=6, dy=0;
 GLfloat ix=4, iy=2;
-int count_time = 1, count_m=1, count_item=0, colide=0, dist=0, life_mosquito=2, life_player=3, count_mosquitoes = 1, aux_count_mosquito=1;
+int count_time = 1, count_m=1, colide=0, dist=0, count_mosquitoes = 1, aux_count_mosquito=1;
 float tam = 2.0; // tamanho do jogador
-float n = 28, m = 20, velocidade = 2.0;
+float n = 28, m = 20;
 int randomix=20, randomiy=20;
 int randomx = 26, randomy = 26;
 
 // Fazendo uma struct para cada mosquito
 typedef struct mosquito{
 	GLfloat dx, dy;
-	int life;
+	int life = 2;
+	float velocidade = 2.0;
 }Mosquito;
 
+typedef struct player{
+	GLfloat tx = 0, ty= 0;
+	float velocidade = 2.0;
+	int life = 3;
+	int count_item = 0;
+}Player;
+
+// Definindo o jogador
+Player player;
 // Definindo a quantidade máxima de mosquitos
 Mosquito mosquitoes [Max_mosquitoes];
 
@@ -32,7 +40,7 @@ void desenha() {
 
 	// Gota - Jogador
 	glPushMatrix();
-	glTranslatef(tx, ty, 0.0f);
+	glTranslatef(player.tx, player.ty, 0.0f);
 	glBegin(GL_QUADS);
 	    glColor3f(0.0, 1.0, 1.0);
 	    glVertex2f(-tam/2, -tam/2);
@@ -80,22 +88,22 @@ void inicializa(){
 }
 void colisao(){
 	// Colisao com o Item
- 	dist = sqrt(pow(tx - ix, 2) + pow(ty - iy, 2));
+ 	dist = sqrt(pow(player.tx - ix, 2) + pow(player.ty - iy, 2));
     if (dist < tam && colide == 0) {
     	colide = 1;
-    	count_item += 1;
-    	printf("%d", count_item);
+    	player.count_item += 1;
+    	printf("%d", player.count_item);
     	count_time = 1;
         glutPostRedisplay();
     }
 
     // Colisao com os mosquitos
     for (int i=0; i<count_mosquitoes; i++){
-    	dist = sqrt(pow(tx - mosquitoes[i].dx, 2) + pow (ty - mosquitoes[i].dy, 2));
+    	dist = sqrt(pow(player.tx - mosquitoes[i].dx, 2) + pow (player.ty - mosquitoes[i].dy, 2));
     	if (dist < tam ) {
-    		life_player --;
-    		printf("Vida do jogador %d", life_player);
-    		if (life_player == 0)exit(0);
+    		player.life--;
+    		printf("Vida do jogador %d", player.life);
+    		if (player.life == 0)exit(0);
     	}
 	}
     
@@ -104,29 +112,29 @@ void colisao(){
 void teclado(unsigned char key, int x, int y){
 	switch(key){
 		case 'a':	
-			if (tx < -n-1) tx =  -n-1;
-			tx -= 1;
+			if (player.tx < -n-1) player.tx =  -n-1;
+			player.tx -= 1;
 			colisao();
 		break;
 		
 		case 'd':
 			
-			if (tx > n+1) tx = n+1;
-			tx += 1;
+			if (player.tx > n+1) player.tx = n+1;
+			player.tx += 1;
 			colisao();
 		break;
 		
 		case 'w':
 			
-    		if (ty > m +tam) ty = m + tam;
-			ty += 1;
+    		if (player.ty > m +tam) player.ty = m + tam;
+			player.ty += 1;
 			colisao();
 		break;
 
 		case 's':
 			
-    		if (ty < -m -tam) ty = -tam -m;
-    		ty -= 1;
+    		if (player.ty < -m -tam) player.ty = -tam -m;
+    		player.ty -= 1;
     		colisao();
 		break;
 		
@@ -141,10 +149,10 @@ void timer(int value) {
 // Mosquito persegue o jogador
 	
 	for (int i=0; i<count_mosquitoes; i++){
-		if (mosquitoes[i].dx < tx)mosquitoes[i].dx += velocidade;
-   		else if (mosquitoes[i].dx > tx)mosquitoes[i].dx -= velocidade;
-		if (mosquitoes[i].dy < ty)mosquitoes[i].dy += velocidade;
-    	else if (mosquitoes[i].dy > ty)mosquitoes[i].dy -= velocidade;
+		if (mosquitoes[i].dx < player.tx)mosquitoes[i].dx += mosquitoes[i].velocidade;
+   		else if (mosquitoes[i].dx > player.tx)mosquitoes[i].dx -= mosquitoes[i].velocidade;
+		if (mosquitoes[i].dy < player.ty)mosquitoes[i].dy += mosquitoes[i].velocidade;
+    	else if (mosquitoes[i].dy > player.ty)mosquitoes[i].dy -= mosquitoes[i].velocidade;
 	}
     
 // Spawnando outro item a cada 5 segundos
@@ -158,7 +166,7 @@ void timer(int value) {
 	count_time++;
 	
 // Spawnando outro mosquito após o jogador possuir 5 itens
-	if (count_item == 5 *aux_count_mosquito){
+	if (player.count_item == 2 *aux_count_mosquito){
 		if (count_mosquitoes < Max_mosquitoes){
 			aux_count_mosquito++;
 			mosquitoes[count_mosquitoes].dx = rand() % (2 * randomx + 1) - randomx;
