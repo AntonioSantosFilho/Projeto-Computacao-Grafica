@@ -6,9 +6,12 @@
 
 #define Max_mosquitoes 100
 
-int win = 25;
+#define timerloop 60
+//definindo o tempo de chamada de timer a cada x milisegundos
+
+int win = 25, count_timer_loop = 0;
 GLfloat ix = 4, iy = 2;
-int count_time = 1, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 1, aux_count_mosquito = 1, score = 0, level = 1;
+int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 1, aux_count_mosquito = 1, score = 0, level = 1;
 float tam = 2.0; // tamanho do jogador
 float n = 28, m = 20;
 int randomix = 20, randomiy = 20;
@@ -78,17 +81,24 @@ void desenhaTexto (void *font, char *string){
 	}
 }
 
+void desenhaTimer (void *font, char *string){
+	while (*string){
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+
 void finaliza(){
-    char nome[20];
     printf("Seu Score foi : %d\n", score);
-    printf("Digite seu nome: ");
-    fgets(nome, 20, stdin);
     exit(0);
 }
 
 void desenha() {
 	char scoreText[20];
 	sprintf(scoreText, "Score : %d", score);
+	
+	char time_gameText[20];
+	sprintf(time_gameText, "Tempo: %d", count_time_game);
 	
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -135,7 +145,7 @@ void desenha() {
         glPopMatrix();
     }
 
-    // Item - Objeto
+    // Item - ObjetoAzul
     if (colide == 0) {
         glPushMatrix();
         glTranslatef(ix, iy, 0.0f);
@@ -149,6 +159,7 @@ void desenha() {
         glPopMatrix();
     }
     
+    // item - Escudo
      if (shield.ativo) {
         glPushMatrix();
         glTranslatef(player.tx, player.ty, 0.0f);
@@ -174,6 +185,13 @@ void desenha() {
     glColor3f(0.0, 0.0, 0.0);
     glRasterPos2f(-n + 25, m + 1.5f); // Posição do score na tela
     desenhaTexto(GLUT_BITMAP_HELVETICA_18, scoreText);
+    glPopMatrix();
+    
+    // Desenhando o Timer na tela
+    glPushMatrix();
+    glColor3f(0.0,0.0,0.0);
+    glRasterPos2f(-n + 50, m + 1.5f); // Posição do timer na tela
+    desenhaTimer(GLUT_BITMAP_HELVETICA_18, time_gameText);
     glPopMatrix();
     
     glFlush();
@@ -225,7 +243,7 @@ void colisao() {
         count_time = 1;
         glutPostRedisplay();
     }
-
+	// Colisão com o Escudo
     if (shield.ativo) {
         float escudoX = player.tx + shield.radius * cos(shield.angle);
         float escudoY = player.ty + shield.radius * sin(shield.angle);
@@ -384,6 +402,12 @@ void atualizarPosicaoJogador() {
 }
 
 void timer(int value) {
+	count_timer_loop += timerloop;
+	if (count_timer_loop >= 1000){// Convertendo milissegundos em segundos
+	count_time_game++; // adicionando 1 segundo no contador do jogo
+	count_timer_loop = 0;
+	}
+	
     // Mosquito persegue o jogador
     for (int i = 0; i < count_mosquitoes; i++) {
         if (mosquitoes[i].dx < player.tx) mosquitoes[i].dx += mosquitoes[i].velocidade;
@@ -421,7 +445,7 @@ void timer(int value) {
         }
     }
 
-    glutTimerFunc(60, timer, 0); // Aumentar a frequência do timer para 50ms
+    glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
 }
 
 
