@@ -5,18 +5,18 @@
 #include <time.h>
 
 #define Max_mosquitoes 100
-
+#define Max_shots 100 // Defina um número máximo para os tiros
 #define timerloop 60
 //definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0;
 GLfloat ix = 4, iy = 2;
-int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 1, aux_count_mosquito = 1, score = 0, level = 1;
+int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, score = 0, level = 1;
 float tam = 2.0; // tamanho do jogador
 float n = 28, m = 20;
 int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
-
+bool escudoGirando = false;
 time_t ultimoTempoPicada;
 
 bool keys[256]; // Array para monitorar o estado das teclas
@@ -41,25 +41,20 @@ typedef struct shield {
     int ativo;
 } Shield;
 
-Shield shield = {0, 6.0, 0}; // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
-bool escudoGirando = false;
-
-
-#define Max_shots 100 // Defina um número máximo para os tiros
-
 typedef struct shot {
     GLfloat x, y;
     float velocidade;
     int ativo; // 0 = inativo, 1 = ativo
 } Shot;
 
-Shot shots[Max_shots];
-
-// Definindo o jogador
-Player player = {0, 0, 1.0, 5, 0};
 // Definindo a quantidade máxima de mosquitos
 Mosquito mosquitoes[Max_mosquitoes];
-
+// Definindo a quantidade máxima de mosquitos
+Shot shots[Max_shots];
+// Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
+Shield shield = {0, 6.0, 0}; 
+// Definindo o jogador
+Player player = {0, 0, 1.0, 5, 0};
 
 void desenharCoracao(float x, float y, float tamanho) {
     int i;
@@ -204,16 +199,10 @@ void atualizarPosicaoEscudo() {
     }
 }
 
-
 void inicializa() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    mosquitoes[0].dx = 10;
-    mosquitoes[0].dy = 0;
-    mosquitoes[0].life = 0;
-    mosquitoes[0].velocidade = 0.2;
     
-     for (int i = 1; i < 10; i++) {
+     for (int i = 0; i < 10; i++) {
         mosquitoes[i].dx = rand() % (2 * randomx + i*2) - randomx; // Randomiza dx entre -randomx e randomx
         mosquitoes[i].dy = rand() % (2 * randomy + i*3) - randomy; // Randomiza dy entre -randomy e randomy
         mosquitoes[i].life = 1;
@@ -266,8 +255,7 @@ void colisao() {
         }
     }
 	
-	 time_t tempoAtual = time(NULL);
-	 
+	 time_t tempoAtual = time(NULL); 
 
     // Colisão com os mosquitos
     for (int i = 0; i < count_mosquitoes; i++) {
@@ -307,7 +295,6 @@ void colisao() {
     }
 }
 
-
 void atirar() {
     for (int i = 0; i < Max_shots; i++) {
         if (!shots[i].ativo) { // Encontre um tiro inativo
@@ -334,7 +321,6 @@ void mouse(int button, int state, int x, int y) {
 	    }
 	} 
 }
-
 
 void moverTiros() {
     for (int i = 0; i < Max_shots; i++) {
@@ -447,8 +433,6 @@ void timer(int value) {
 
     glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
 }
-
-
 
 void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 {
