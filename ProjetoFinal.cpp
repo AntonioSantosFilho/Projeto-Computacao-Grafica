@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
@@ -9,14 +8,13 @@
 
 int win = 25;
 GLfloat ix = 4, iy = 2;
-int count_time = 1, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 1, aux_count_mosquito = 1;
+int count_time = 1, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 1, aux_count_mosquito = 1, score = 0, level = 1;
 float tam = 2.0; // tamanho do jogador
 float n = 28, m = 20;
 int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
 
 time_t ultimoTempoPicada;
-
 
 bool keys[256]; // Array para monitorar o estado das teclas
 
@@ -73,7 +71,25 @@ void desenharCoracao(float x, float y, float tamanho) {
     glEnd();
 }
 
+void desenhaTexto (void *font, char *string){
+	while (*string){
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+
+void finaliza(){
+    char nome[20];
+    printf("Seu Score foi : %d\n", score);
+    printf("Digite seu nome: ");
+    fgets(nome, 20, stdin);
+    exit(0);
+}
+
 void desenha() {
+	char scoreText[20];
+	sprintf(scoreText, "Score : %d", score);
+	
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
@@ -148,14 +164,20 @@ void desenha() {
         glEnd();
         glPopMatrix();
     }
-    
+
      for (int i = 0; i < player.life; i++) {
-        desenharCoracao(-n + 2.0f + i * 2.5f, m - 2.0f, 1.0f);
+        desenharCoracao(-n + i * 2.5f, m + 2.0f, 1.0f);
     }
+    
+    // Desenhando o Score na tela
+    glPushMatrix();
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(-n + 25, m + 1.5f); // Posição do score na tela
+    desenhaTexto(GLUT_BITMAP_HELVETICA_18, scoreText);
+    glPopMatrix();
+    
     glFlush();
 }
-
-
 
 void atualizarPosicaoEscudo() {
    if (shield.ativo && escudoGirando) {
@@ -194,6 +216,7 @@ void colisao() {
      dist = sqrt(pow(player.tx - ix, 2) + pow(player.ty - iy, 2));
     if (dist < tam && colide == 0) {
         colide = 1;
+        score += 15;
         player.count_item += 1;
         printf("%d\n", player.count_item);
         if (player.count_item % 2 == 0) { // Ativa o escudo em cada segundo item coletado
@@ -217,6 +240,7 @@ void colisao() {
                         mosquitoes[k] = mosquitoes[k + 1];
                     }
                     count_mosquitoes--;
+                    score += 75;
                     i--; // Ajuste o índice para verificar o próximo mosquito corretamente
                     break;
                 }
@@ -234,7 +258,9 @@ void colisao() {
             player.life--;
             printf("Vida do jogador %d\n", player.life);
             ultimoTempoPicada = tempoAtual; // Atualiza o tempo da última picada
-            if (player.life == 0) exit(0);
+            if (player.life == 0){
+            	finaliza();
+			}
         }
 
         // Colisão entre tiros e mosquitos
@@ -243,6 +269,9 @@ void colisao() {
                 dist = sqrt(pow(shots[j].x - mosquitoes[i].dx, 2) + pow(shots[j].y - mosquitoes[i].dy, 2));
                 if (dist < tam / 2) {
                     mosquitoes[i].life--;
+                    if (mosquitoes[i].life == 0){
+                    	score += 75;
+					}
                     shots[j].ativo = 0;
                     printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
                     if (mosquitoes[i].life <= 0) {
@@ -422,8 +451,6 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
         win = 25.0f * largura / altura;           
     }
 }
-
-
 
 int main() {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
