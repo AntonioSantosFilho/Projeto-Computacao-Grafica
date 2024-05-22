@@ -6,20 +6,23 @@
 
 #define Max_mosquitoes 100
 #define Max_shots 100 // Defina um número máximo para os tiros
-#define timerloop 60
-//definindo o tempo de chamada de timer a cada x milisegundos
+#define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
-int win = 25, count_timer_loop = 0;
+int win = 25, count_timer_loop = 0, count_mensage = 0;
 GLfloat ix = 4, iy = 2;
-int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, score = 0, level = 1;
+int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
 float tam = 2.0; // tamanho do jogador
 float n = 28, m = 20;
 int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
+int intervalo_spawn = 3000;
+char mensagem[20];
 bool escudoGirando = false;
-time_t ultimoTempoPicada;
-
 bool keys[256]; // Array para monitorar o estado das teclas
+time_t ultimoTempoPicada;
+time_t tempo_ultimo_spawn;
+time_t tempo_mensagem; // Tempo de início da mensagem
+int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
 
 // Fazendo uma struct para cada mosquito
 typedef struct mosquito {
@@ -82,7 +85,41 @@ void desenhaTimer (void *font, char *string){
 		string++;
 	}
 }
+void desenhaMensagem(void *font, char *string){
+	while (*string){
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+void escolheMensagem (int level){
+	switch(level){
+		case 0:
+			sprintf(mensagem, "O nivel de Infestacao esta no nivel %d", level);
+			break;
+		case 1:
+			sprintf(mensagem, "O nivel de Infestacao tornou-se %d. HORA DE USAR REPELENTES!!", level);
+			break;
+		case 2:
+			sprintf(mensagem, "O nivel de Infestacao tornou-se %d. TALVEZ UMA ARMA DIFERENTE SEJA MELHOR?", level);
+			break;
+		case 3:
+			sprintf(mensagem, "O nivel de Infestacao tornou-se %d. MELHOR SE MOVIMENTAR OU VAI SER FERRUADO!!", level);
+			break;
+		case 4:
+			sprintf(mensagem, "O nivel de Infestacao tornou-se %d\n. CUIDADO COM OS MOSQUITOES!!!", level);
+			break;
+		case 5:
+			sprintf(mensagem, "O nivel de Infestacao tornou-se %d\n. NENHUM REPELENTE PODE TE AJUDAR AGORA, E SO VOCE E SUA ARMA!!", level);
+			break;
+		default:
+			break;
+	}
+}
 
+void desativarMensagem(int value) {
+    count_mensage = 0;
+    glutPostRedisplay();
+}
 void finaliza(){
     printf("Seu Score foi : %d\n", score);
     exit(0);
@@ -94,6 +131,8 @@ void desenha() {
 	
 	char time_gameText[20];
 	sprintf(time_gameText, "Tempo: %d", count_time_game);
+	
+	escolheMensagem(level);
 	
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -178,7 +217,7 @@ void desenha() {
     // Desenhando o Score na tela
     glPushMatrix();
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(-n + 25, m + 1.5f); // Posição do score na tela
+    glRasterPos2f(-n + 25, m + 3.0f); // Posição do score na tela
     desenhaTexto(GLUT_BITMAP_HELVETICA_18, scoreText);
     glPopMatrix();
     
@@ -189,7 +228,16 @@ void desenha() {
     desenhaTimer(GLUT_BITMAP_HELVETICA_18, time_gameText);
     glPopMatrix();
     
-    glFlush();
+    // Desenhando a mensagem
+    if(level>=0 && count_mensage){
+    	glPushMatrix();
+    	glColor3f(1.0,0.0,0.0);
+    	glRasterPos2f(-n + 3, m);
+    	desenhaMensagem(GLUT_BITMAP_HELVETICA_18, mensagem );
+    	
+    	glutTimerFunc(5000, desativarMensagem, 0);
+	}
+	glFlush();
 }
 
 void atualizarPosicaoEscudo() {
@@ -319,9 +367,38 @@ void mouse(int button, int state, int x, int y) {
         if (state == GLUT_DOWN) {
            atirar();
 	    }
-	} 
+	}
 }
+void spawnMosquito(){
+    if (count_mosquitoes < Max_mosquitoes) {
+        aux_count_mosquito++;
+        
+        int side = rand() % 4; // 0: top, 1: bottom, 2: left, 3: right
 
+        switch (side) {
+            case 0: // Top
+                mosquitoes[count_mosquitoes].dx = rand() % (2 * randomx) - randomx; // Random x within bounds
+                mosquitoes[count_mosquitoes].dy = randomy; // Top edge
+                break;
+            case 1: // Bottom
+                mosquitoes[count_mosquitoes].dx = rand() % (2 * randomx) - randomx; // Random x within bounds
+                mosquitoes[count_mosquitoes].dy = -randomy; // Bottom edge
+                break;
+            case 2: // Left
+                mosquitoes[count_mosquitoes].dx = -randomx; // Left edge
+                mosquitoes[count_mosquitoes].dy = rand() % (2 * randomy) - randomy; // Random y within bounds
+                break;
+            case 3: // Right
+                mosquitoes[count_mosquitoes].dx = randomx; // Right edge
+                mosquitoes[count_mosquitoes].dy = rand() % (2 * randomy) - randomy; // Random y within bounds
+                break;
+        }
+        
+        mosquitoes[count_mosquitoes].life = 1;
+        mosquitoes[count_mosquitoes].velocidade = 0.2;
+        count_mosquitoes++;
+    }
+}
 void moverTiros() {
     for (int i = 0; i < Max_shots; i++) {
         if (shots[i].ativo) {
@@ -419,18 +496,20 @@ void timer(int value) {
     }
     count_time++;
 
-    // Spawnando outro mosquito após o jogador possuir 5 itens
-    if (player.count_item == 2 * aux_count_mosquito) {
-        if (count_mosquitoes < Max_mosquitoes) {
-            aux_count_mosquito++;
-            mosquitoes[count_mosquitoes].dx = rand() % (2 * randomx + 4) - randomx;
-            mosquitoes[count_mosquitoes].dy = rand() % (2 * randomy + 6) - randomy;
-            mosquitoes[count_mosquitoes].life = 1;
-            mosquitoes[count_mosquitoes].velocidade = 0.2;
-            count_mosquitoes++;
-        }
+    // Atualizando o nível a cada 30 segundos
+    if (count_time_game ==  30 * aux_count_time) {
+    	aux_count_time++;     
+        level++;
+        count_mensage = 1;
+        // Reduz o intervalo de spawn conforme o nível aumenta
+        intervalo_spawn = 3000 / (level + 1); // Exemplo: nível 0 => 3000ms, nível 1 => 1500ms, etc.      
     }
-
+	// Spawnando mosquito de acordo com o intervalo de tempo do nível de infestação
+	if (difftime(time(NULL), tempo_ultimo_spawn) * 1000 >= intervalo_spawn) {
+        spawnMosquito();
+        tempo_ultimo_spawn = time(NULL);
+    }
+    
     glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
 }
 
