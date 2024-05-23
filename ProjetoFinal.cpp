@@ -465,12 +465,13 @@ void atualizarPosicaoJogador() {
 }
 
 void timer(int value) {
-	atualizarPosicaoEscudo(); 
+	 
 	count_timer_loop += timerloop;
 	if (count_timer_loop >= 1000){// Convertendo milissegundos em segundos
 	count_time_game++; // adicionando 1 segundo no contador do jogo
 	count_timer_loop = 0;
 	}
+
 	
     // Mosquito persegue o jogador
     for (int i = 0; i < count_mosquitoes; i++) {
@@ -485,7 +486,7 @@ void timer(int value) {
     moverTiros(); // Atualiza a posição dos tiros
     atualizarPosicaoJogador(); // Atualiza a posição do jogador com base nas teclas pressionadas
     // Atualiza a posição do escudo
-
+	atualizarPosicaoEscudo();
     // Verifica colisões após atualizar os tiros
     colisao();
 
