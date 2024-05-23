@@ -8,7 +8,7 @@
 #define Max_shots 100 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
-int win = 25, count_timer_loop = 0, count_mensage = 0;
+int win = 25, count_timer_loop = 0, count_message = 0;
 GLfloat ix = 4, iy = 2;
 int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
 float tam = 2.0; // tamanho do jogador
@@ -117,7 +117,7 @@ void escolheMensagem (int level){
 }
 
 void desativarMensagem(int value) {
-    count_mensage = 0;
+    count_message = 0;
     glutPostRedisplay();
 }
 void finaliza(){
@@ -229,7 +229,7 @@ void desenha() {
     glPopMatrix();
     
     // Desenhando a mensagem
-    if(level>=0 && count_mensage){
+    if(level>=0 && count_message){
     	glPushMatrix();
     	glColor3f(1.0,0.0,0.0);
     	glRasterPos2f(-n + 3, m);
@@ -500,7 +500,7 @@ void timer(int value) {
     if (count_time_game ==  30 * aux_count_time) {
     	aux_count_time++;     
         level++;
-        count_mensage = 1;
+        count_message = 1;
         // Reduz o intervalo de spawn conforme o nível aumenta
         intervalo_spawn = 3000 / (level + 1); // Exemplo: nível 0 => 3000ms, nível 1 => 1500ms, etc.      
     }
