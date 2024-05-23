@@ -17,7 +17,7 @@ int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
 int intervalo_spawn = 3000;
 char mensagem[20];
-bool escudoGirando = false;
+bool escudoGirando = true;
 bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
@@ -465,6 +465,7 @@ void atualizarPosicaoJogador() {
 }
 
 void timer(int value) {
+	atualizarPosicaoEscudo(); 
 	count_timer_loop += timerloop;
 	if (count_timer_loop >= 1000){// Convertendo milissegundos em segundos
 	count_time_game++; // adicionando 1 segundo no contador do jogo
@@ -478,10 +479,12 @@ void timer(int value) {
         if (mosquitoes[i].dy < player.ty) mosquitoes[i].dy += mosquitoes[i].velocidade;
         else if (mosquitoes[i].dy > player.ty) mosquitoes[i].dy -= mosquitoes[i].velocidade;
     }
+    
+   
 	checarColisaoEntreMosquitos();
     moverTiros(); // Atualiza a posição dos tiros
     atualizarPosicaoJogador(); // Atualiza a posição do jogador com base nas teclas pressionadas
-    atualizarPosicaoEscudo(); // Atualiza a posição do escudo
+    // Atualiza a posição do escudo
 
     // Verifica colisões após atualizar os tiros
     colisao();
