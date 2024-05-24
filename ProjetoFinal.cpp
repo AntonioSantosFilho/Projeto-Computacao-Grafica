@@ -12,6 +12,7 @@ int win = 25, count_timer_loop = 0, count_message = 0;
 GLfloat ix = 4, iy = 2;
 int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
 float tam = 2.0; // tamanho do jogador
+
 float n = 28, m = 20;
 int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
@@ -22,8 +23,10 @@ bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem; // Tempo de início da mensagem
+GLint playerTexture; // para carregar a textura do jogador
 int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
 
+	
 // Fazendo uma struct para cada mosquito
 typedef struct mosquito {
     GLfloat dx, dy;
@@ -46,6 +49,7 @@ typedef struct shield {
 
 typedef struct shot {
     GLfloat x, y;
+    GLfloat dx, dy; // Direcao que o mesmo esta olhandos
     float velocidade;
     int ativo; // 0 = inativo, 1 = ativo
 } Shot;
@@ -249,14 +253,6 @@ void atualizarPosicaoEscudo() {
 
 void inicializa() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    
-     for (int i = 0; i < 10; i++) {
-        mosquitoes[i].dx = rand() % (2 * randomx + i*2) - randomx; // Randomiza dx entre -randomx e randomx
-        mosquitoes[i].dy = rand() % (2 * randomy + i*3) - randomy; // Randomiza dy entre -randomy e randomy
-        mosquitoes[i].life = 1;
-        mosquitoes[i].velocidade = 0.1;
-        count_mosquitoes++;
-    }
 
     for (int i = 0; i < Max_shots; i++) {
         shots[i].ativo = 0;
@@ -343,12 +339,19 @@ void colisao() {
     }
 }
 
-void atirar() {
+void atirar(int mouseX, int mouseY) {
     for (int i = 0; i < Max_shots; i++) {
-        if (!shots[i].ativo) { // Encontre um tiro inativo
+        if (!shots[i].ativo) {
             shots[i].x = player.tx;
             shots[i].y = player.ty;
-            shots[i].velocidade = 0.8; // Aumentar a velocidade dos tiros
+
+            // Calcular a direção do tiro em relação à posição do mouse
+            float dx = mouseX - player.tx;
+            float dy = mouseY - player.ty;
+            float magnitude = sqrt(dx * dx + dy * dy);
+            shots[i].dx = dx / magnitude;
+            shots[i].dy = dy / magnitude;
+            shots[i].velocidade = 0.5;
             shots[i].ativo = 1;
             break;
         }
@@ -356,18 +359,16 @@ void atirar() {
 }
 
 void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_RIGHT_BUTTON) {
+	if (button == GLUT_RIGHT_BUTTON) {
         if (state == GLUT_DOWN) {
             escudoGirando = true; // Inicia a rotação do escudo
         } else if (state == GLUT_UP) {
             escudoGirando = false; // Para a rotação do escudo
         }
     }
-    if (button == GLUT_LEFT_BUTTON) {
-        if (state == GLUT_DOWN) {
-           atirar();
-	    }
-	}
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // Apenas atira se o botão esquerdo do mouse for pressionado
+        atirar(x - 250, 250 - y);
+    }
 }
 void spawnMosquito(){
     if (count_mosquitoes < Max_mosquitoes) {
@@ -403,7 +404,8 @@ void moverTiros() {
     for (int i = 0; i < Max_shots; i++) {
         if (shots[i].ativo) {
             colisao();
-            shots[i].x += shots[i].velocidade; // Mover os tiros mais rapidamente
+            shots[i].x += shots[i].dx * shots[i].velocidade; // Mover os tiros mais rapidamente na direção x que ele esta olhando
+			shots[i].y += shots[i].dy * shots[i].velocidade; // Mover os tiros mais rapidamente na direção y que ele esta olhando
             // Desative o tiro se ele sair da tela
             if (shots[i].x > n || shots[i].x < -n || shots[i].y > m || shots[i].y < -m) {
                 shots[i].ativo = 0;
@@ -437,9 +439,6 @@ void checarColisaoEntreMosquitos() {
 
 void teclado(unsigned char key, int x, int y) {
     keys[key] = true; // Marca a tecla como pressionada
-    if (key == 'c') {
-        atirar();
-    }
 }
 
 void tecladoUp(unsigned char key, int x, int y) {
