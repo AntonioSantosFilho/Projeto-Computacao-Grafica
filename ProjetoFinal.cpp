@@ -345,21 +345,31 @@ void atirar(int mouseX, int mouseY) {
             shots[i].x = player.tx;
             shots[i].y = player.ty;
 
-            // Calcular a direção do tiro em relação à posição do mouse
-            float dx = mouseX - player.tx;
-            float dy = mouseY - player.ty;
+            // Transforma coordenadas do mouse para coordenadas do mundo
+            GLdouble modelview[16], projection[16];
+            GLint viewport[4];
+            GLdouble worldX, worldY, worldZ;
+            glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+            glGetDoublev(GL_PROJECTION_MATRIX, projection);
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            gluUnProject(mouseX, viewport[1] + viewport[3] - mouseY, 0.0, modelview, projection, viewport, &worldX, &worldY, &worldZ);
+
+            // Calcular a direção do tiro em relação à posição transformada do mouse
+            float dx = worldX - player.tx;
+            float dy = worldY - player.ty;
             float magnitude = sqrt(dx * dx + dy * dy);
             shots[i].dx = dx / magnitude;
             shots[i].dy = dy / magnitude;
-            shots[i].velocidade = 0.5;
+            shots[i].velocidade = 0.9;
             shots[i].ativo = 1;
             break;
         }
     }
 }
 
+
 void mouse(int button, int state, int x, int y) {
-	if (button == GLUT_RIGHT_BUTTON) {
+    if (button == GLUT_RIGHT_BUTTON) {
         if (state == GLUT_DOWN) {
             escudoGirando = true; // Inicia a rotação do escudo
         } else if (state == GLUT_UP) {
@@ -367,7 +377,7 @@ void mouse(int button, int state, int x, int y) {
         }
     }
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // Apenas atira se o botão esquerdo do mouse for pressionado
-        atirar(x - 250, 250 - y);
+        atirar(x, y);
     }
 }
 void spawnMosquito(){
