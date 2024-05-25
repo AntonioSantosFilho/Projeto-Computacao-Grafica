@@ -4,17 +4,16 @@
 #include <math.h>
 #include <time.h>
 
+#define Max_items  3
 #define Max_mosquitoes 100
-#define Max_shots 100 // Defina um número máximo para os tiros
+#define Max_shots 3 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0, count_message = 0;
-GLfloat ix = 4, iy = 2;
 int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
 float tam = 2.0; // tamanho do jogador
 
 float n = 28, m = 20;
-int randomix = 20, randomiy = 20;
 int randomx = 26, randomy = 26;
 int intervalo_spawn = 3000;
 char mensagem[20];
@@ -54,6 +53,16 @@ typedef struct shot {
     int ativo; // 0 = inativo, 1 = ativo
 } Shot;
 
+typedef enum {REPELENTEX,AMMO,SCORE} ItemType;
+
+typedef struct item {
+	GLfloat x, y;
+	ItemType type;
+	int ativo;
+} Item;
+
+// Definindo a quantidade máxima de itens
+Item item[Max_items];
 // Definindo a quantidade máxima de mosquitos
 Mosquito mosquitoes[Max_mosquitoes];
 // Definindo a quantidade máxima de mosquitos
@@ -183,19 +192,30 @@ void desenha() {
         glPopMatrix();
     }
 
-    // Item - ObjetoAzul
-    if (colide == 0) {
-        glPushMatrix();
-        glTranslatef(ix, iy, 0.0f);
-        glBegin(GL_QUADS);
-        glColor3f(0.0, 0.0, 1.0);
-        glVertex2f(-tam / 3, -tam / 3);
-        glVertex2f(tam / 3, -tam / 3);
-        glVertex2f(tam / 3, tam / 3);
-        glVertex2f(-tam / 3, tam / 3);
-        glEnd();
-        glPopMatrix();
-    }
+	for (int i = 0; i < Max_items; i++) {
+	    if (item[i].ativo) {
+	        glPushMatrix();
+	        glTranslatef(item[i].x, item[i].y, 0.0);
+	        glBegin(GL_QUADS);
+	        switch (item[i].type) {
+	            case 0:
+	                glColor3f(0.0, 1.0, 0.0); // Verde para REPELENTEX
+	                break;
+	            case 1:
+	                glColor3f(1.0, 0.0, 0.0); // Vermelho para AMMO
+	                break;
+	            case 2:
+	                glColor3f(1.0, 1.0, 0.0); // Amarelo para SCORE
+	                break;
+	        }
+	        glVertex2f(-tam / 3, -tam / 3);
+	        glVertex2f(tam / 3, -tam / 3);
+	        glVertex2f(tam / 3, tam / 3);
+	        glVertex2f(-tam / 3, tam / 3);
+	        glEnd();
+	        glPopMatrix();
+	    }
+	}
     
     // item - Escudo
      if (shield.ativo) {
@@ -264,41 +284,49 @@ void inicializa() {
 
 void colisao() {
     // Colisão com o Item
-     dist = sqrt(pow(player.tx - ix, 2) + pow(player.ty - iy, 2));
-    if (dist < tam && colide == 0) {
-        colide = 1;
-        score += 15;
-        player.count_item += 1;
-        printf("%d\n", player.count_item);
-        if (player.count_item % 2 == 0) { // Ativa o escudo em cada segundo item coletado
-            shield.ativo = 1;
-        }
-        count_time = 1;
-        glutPostRedisplay();
-    }
-	// Colisão com o Escudo
-    if (shield.ativo) {
-        float escudoX = player.tx + shield.radius * cos(shield.angle);
-        float escudoY = player.ty + shield.radius * sin(shield.angle);
-        for (int i = 0; i < count_mosquitoes; i++) {
-            dist = sqrt(pow(escudoX - mosquitoes[i].dx, 2) + pow(escudoY - mosquitoes[i].dy, 2));
-            if (dist < tam / 2) {
-                mosquitoes[i].life--;
-                printf("Mosquito atingido pelo escudo! Vida restante: %d\n", mosquitoes[i].life);
-                if (mosquitoes[i].life <= 0) {
-                    // Remove o mosquito
-                    for (int k = i; k < count_mosquitoes - 1; k++) {
-                        mosquitoes[k] = mosquitoes[k + 1];
-                    }
-                    count_mosquitoes--;
-                    score += 75;
-                    i--; // Ajuste o índice para verificar o próximo mosquito corretamente
-                    break;
+    for (int i = 0; i < Max_items; i++) {
+        if (item[i].ativo) {
+            dist = sqrt(pow(player.tx - item[i].x, 2) + pow(player.ty - item[i].y, 2));
+            if (dist < tam) {
+                switch (item[i].type) {
+                    case 0:
+                        shield.ativo = 1;
+                        break;
+                    case 1:
+                        // aumentar municao
+                        break;
+                    case 2:
+                        // aumentar score
+                        break;
                 }
+                item[i].ativo = 0;
+                score += 15; // Aumentar pontuação ou outra lógica
+                printf("Item coletado: %d\n", item[i].type);
             }
         }
-    }
-	
+		// Colisão com o Escudo
+	    if (shield.ativo) {
+	        float escudoX = player.tx + shield.radius * cos(shield.angle);
+	        float escudoY = player.ty + shield.radius * sin(shield.angle);
+	        for (int i = 0; i < count_mosquitoes; i++) {
+	            dist = sqrt(pow(escudoX - mosquitoes[i].dx, 2) + pow(escudoY - mosquitoes[i].dy, 2));
+	            if (dist < tam / 2) {
+	                mosquitoes[i].life--;
+	                printf("Mosquito atingido pelo escudo! Vida restante: %d\n", mosquitoes[i].life);
+	                if (mosquitoes[i].life <= 0) {
+	                    // Remove o mosquito
+	                    for (int k = i; k < count_mosquitoes - 1; k++) {
+	                        mosquitoes[k] = mosquitoes[k + 1];
+	                    }
+	                    count_mosquitoes--;
+	                    score += 75;
+	                    i--; // Ajuste o índice para verificar o próximo mosquito corretamente
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	}
 	 time_t tempoAtual = time(NULL); 
 
     // Colisão com os mosquitos
@@ -367,7 +395,6 @@ void atirar(int mouseX, int mouseY) {
     }
 }
 
-
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_RIGHT_BUTTON) {
         if (state == GLUT_DOWN) {
@@ -380,6 +407,19 @@ void mouse(int button, int state, int x, int y) {
         atirar(x, y);
     }
 }
+void spawnItem(){
+	for (int i = 0; i<Max_items; i++){
+		if (!item[i].ativo) {
+            item[i].x = rand() % win-4;
+            item[i].y = rand() % win-4;
+            printf("spawn");
+            item[i].type = static_cast<ItemType>(rand() % 3); // para 3 itenss
+            item[i].ativo = 1;
+            break;
+        }
+	}
+}
+
 void spawnMosquito(){
     if (count_mosquitoes < Max_mosquitoes) {
         aux_count_mosquito++;
@@ -481,7 +521,6 @@ void timer(int value) {
 	count_timer_loop = 0;
 	}
 
-	
     // Mosquito persegue o jogador
     for (int i = 0; i < count_mosquitoes; i++) {
         if (mosquitoes[i].dx < player.tx) mosquitoes[i].dx += mosquitoes[i].velocidade;
@@ -489,7 +528,6 @@ void timer(int value) {
         if (mosquitoes[i].dy < player.ty) mosquitoes[i].dy += mosquitoes[i].velocidade;
         else if (mosquitoes[i].dy > player.ty) mosquitoes[i].dy -= mosquitoes[i].velocidade;
     }
-    
    
 	checarColisaoEntreMosquitos();
     moverTiros(); // Atualiza a posição dos tiros
@@ -499,16 +537,10 @@ void timer(int value) {
     // Verifica colisões após atualizar os tiros
     colisao();
 
-    // Spawnando outro item a cada 5 segundos
-    if (count_time == 10) {
-        srand(time(NULL)); // Inicializa a semente randômica com o tempo atual
-        ix = rand() % (2 * randomix + 1) - randomix; // Randomiza ix entre -n e n
-        iy = rand() % (2 * randomiy + 1) - randomiy; // Randomiza iy entre -m e m
-        colide = 0;
-        glutDisplayFunc(desenha);
+    // Spawn de item
+	if (count_time_game == 3 * aux_count_time) { // Exemplo: a cada 100 ciclos de timer
+        spawnItem();
     }
-    count_time++;
-
     // Atualizando o nível a cada 30 segundos
     if (count_time_game ==  30 * aux_count_time) {
     	aux_count_time++;     
