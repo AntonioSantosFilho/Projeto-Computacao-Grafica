@@ -4,6 +4,9 @@
 #include <math.h>
 #include <time.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #define Max_items  3
 #define Max_mosquitoes 100
 #define Max_shots 3 // Defina um número máximo para os tiros
@@ -22,10 +25,9 @@ bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem; // Tempo de início da mensagem
-GLint playerTexture; // para carregar a textura do jogador
+GLuint playerTexture; // para carregar a textura do jogador
 int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
 
-	
 // Fazendo uma struct para cada mosquito
 typedef struct mosquito {
     GLfloat dx, dy;
@@ -152,16 +154,21 @@ void desenha() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Gota - Jogador
-    glPushMatrix();
+  	glPushMatrix();
     glTranslatef(player.tx, player.ty, 0.0f);
+    glBindTexture(GL_TEXTURE_2D, playerTexture);
+    glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
-    glColor3f(0.0, 1.0, 1.0);
-    glVertex2f(-tam / 2, -tam / 2);
-    glVertex2f(tam / 2, -tam / 2);
-    glVertex2f(tam / 2, tam / 2);
-    glVertex2f(-tam / 2, tam / 2);
+    glColor3f(1.0, 1.0, 1.0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(-tam / 2, -tam / 2);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(tam / 2, -tam / 2);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(tam / 2, tam / 2);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tam / 2, tam / 2);
     glEnd();
+    glDisable(GL_TEXTURE_2D);
     glPopMatrix();
+
+    glutSwapBuffers();
 
     // Tiros
     for (int i = 0; i < Max_shots; i++) {
@@ -262,6 +269,24 @@ void desenha() {
     	glutTimerFunc(5000, desativarMensagem, 0);
 	}
 	glFlush();
+}
+
+void carregarTextura(const char* filename) {
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+    if (data) {
+        glGenTextures(1, &playerTexture);
+        glBindTexture(GL_TEXTURE_2D, playerTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, (channels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+    } else {
+        printf("Falha ao carregar a textura %s \n", filename);
+        exit(1);
+    }
 }
 
 void atualizarPosicaoEscudo() {
@@ -596,6 +621,7 @@ int main() {
     glutTimerFunc(50, timer, 0); // Chama a função de timer a cada 50ms
     inicializa();
     glutReshapeFunc(AlteraTamanhoJanela); // Registra a função AlteraTamanhoJanela
+    carregarTextura("AngeloSprite/Parado virado para frente.png");
 
     glutMainLoop();
     return 0;
