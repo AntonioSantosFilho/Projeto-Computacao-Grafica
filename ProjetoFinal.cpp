@@ -4,11 +4,11 @@
 #include <math.h>
 #include <time.h>
 
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define Max_items  10
+#define num_items 4 // Definindo o número de itens presentes no jogo
+#define Max_items 1 // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 3 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
@@ -36,11 +36,9 @@ int variable = 0;
 GLuint playerTextures[NUM_TEXTURES];
 int currentTextureIndex = 0;
 
-
-
 int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
 
-typedef struct {
+typedef struct mosquito{
     float dx;
     float dy;
     float velocidade;
@@ -72,7 +70,7 @@ typedef struct shot {
     int ativo; // 0 = inativo, 1 = ativo
 } Shot;
 
-typedef enum {REPELENTEX,AMMO,SCORE} ItemType;
+typedef enum {BORRIFEX, REPELEX, SCORE, HEALTH} ItemType;
 
 typedef struct item {
 	GLfloat x, y;
@@ -81,9 +79,7 @@ typedef struct item {
 } Item;
 
 // Definindo a quantidade máxima de itens
-Item item[Max_items];
-
-
+Item item[num_items];
 // Definindo a quantidade máxima de mosquitos
 Shot shots[Max_shots];
 // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
@@ -125,9 +121,6 @@ void desenhaMensagem(void *font, char *string){
 }
 void escolheMensagem (int level){
 	switch(level){
-		case 0:
-			sprintf(mensagem, "O nivel de Infestacao esta no nivel %d", level);
-			break;
 		case 1:
 			sprintf(mensagem, "O nivel de Infestacao tornou-se %d. HORA DE USAR REPELENTES!!", level);
 			break;
@@ -282,24 +275,28 @@ void desenha() {
     }
 
 	 drawAllMosquitoes();
-
-
-
+	// Desenha item
 	for (int i = 0; i < Max_items; i++) {
 	    if (item[i].ativo) {
 	        glPushMatrix();
 	        glTranslatef(item[i].x, item[i].y, 0.0);
 	        glBegin(GL_QUADS);
-	        switch (item[i].type) {
-	            case 0:
-	                glColor3f(0.0, 1.0, 0.0); // Verde para REPELENTEX
+	        switch (item[i].type) {	        	
+	        	case 0:
+	                glColor3f(1.0, 0.0, 0.0); // Vermelho para AMMO (Munição)
 	                break;
 	            case 1:
-	                glColor3f(1.0, 0.0, 0.0); // Vermelho para AMMO
+	                glColor3f(0.0, 1.0, 0.0); // Verde para REPELEX
 	                break;
 	            case 2:
 	                glColor3f(1.0, 1.0, 0.0); // Amarelo para SCORE
 	                break;
+	            case 3:
+	            	glColor3f(0.0,0.0,0.0);
+	            	break;
+	            default:
+	            	printf("%d", item[i].type);
+					break;
 	        }
 	        glVertex2f(-tam / 3, -tam / 3);
 	        glVertex2f(tam / 3, -tam / 3);
@@ -308,25 +305,24 @@ void desenha() {
 	        glEnd();
 	        glPopMatrix();
 	    }
+	    // Item - REPELEX
+	    if (shield.ativo) {
+	        glPushMatrix();
+	        glTranslatef(player.tx, player.ty, 0.0f);
+	        float escudoX = shield.radius * cos(shield.angle);
+	        float escudoY = shield.radius * sin(shield.angle);
+	        glTranslatef(escudoX, escudoY, 0.0f);
+	        glBegin(GL_QUADS);
+	        glColor3f(1.0, 1.0, 0.0); // Cor amarela para o escudo
+	        glVertex2f(-tam / 4, -tam / 4);
+	        glVertex2f(tam / 4, -tam / 4);
+	        glVertex2f(tam / 4, tam / 4);
+	        glVertex2f(-tam / 4, tam / 4);
+	        glEnd();
+	        glPopMatrix();
+    	}
 	}
-    
-    // item - Escudo
-     if (shield.ativo) {
-        glPushMatrix();
-        glTranslatef(player.tx, player.ty, 0.0f);
-        float escudoX = shield.radius * cos(shield.angle);
-        float escudoY = shield.radius * sin(shield.angle);
-        glTranslatef(escudoX, escudoY, 0.0f);
-        glBegin(GL_QUADS);
-        glColor3f(1.0, 1.0, 0.0); // Cor amarela para o escudo
-        glVertex2f(-tam / 4, -tam / 4);
-        glVertex2f(tam / 4, -tam / 4);
-        glVertex2f(tam / 4, tam / 4);
-        glVertex2f(-tam / 4, tam / 4);
-        glEnd();
-        glPopMatrix();
-    }
-
+     
      for (int i = 0; i < player.life; i++) {
         desenharCoracao(-n + i * 2.5f, m + 2.0f, 1.0f);
     }
@@ -425,17 +421,21 @@ void colisao() {
             if (dist < tam) {
                 switch (item[i].type) {
                     case 0:
-                        shield.ativo = 1;
+                        // armar o jogador com o borrifador
                         break;
                     case 1:
-                        // aumentar municao
+                        shield.ativo;
                         break;
                     case 2:
-                        // aumentar score
+                        score+=15;
                         break;
+                    case 3:
+                    	player.life++;
+                    	break;
+                    default:
+                    	break;
                 }
                 item[i].ativo = 0;
-                score += 15; // Aumentar pontuação ou outra lógica
                 printf("Item coletado: %d\n", item[i].type);
             }
         }
@@ -546,12 +546,11 @@ void mouse(int button, int state, int x, int y) {
 void spawnItem(){
 	for (int i = 0; i<Max_items; i++){
 		if (!item[i].ativo) {
-            item[i].x = rand() % win-4;
-            item[i].y = rand() % win-4;
+            item[i].x = rand() % 12;
+            item[i].y = rand() % 12;
             printf("spawn");
-            item[i].type = static_cast<ItemType>(rand() % 3); // para 3 itenss
+            item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
             item[i].ativo = 1;
-          
         }
           break;
 	}
