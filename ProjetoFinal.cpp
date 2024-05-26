@@ -29,6 +29,7 @@ bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem; // Tempo de início da mensagem
+time_t ultimoTempoItem; //tempo de spawn de item
 
 int variable = 0;
 
@@ -282,17 +283,17 @@ void desenha() {
 	        glTranslatef(item[i].x, item[i].y, 0.0);
 	        glBegin(GL_QUADS);
 	        switch (item[i].type) {	        	
-	        	case 0:
-	                glColor3f(1.0, 0.0, 0.0); // Vermelho para AMMO (Munição)
+	        	case BORRIFEX:
+	                glColor3f(1.0, 0.0, 0.0); // Vermelho para BORRIFEX
 	                break;
-	            case 1:
+	            case REPELEX:
 	                glColor3f(0.0, 1.0, 0.0); // Verde para REPELEX
 	                break;
-	            case 2:
+	            case SCORE:
 	                glColor3f(1.0, 1.0, 0.0); // Amarelo para SCORE
 	                break;
-	            case 3:
-	            	glColor3f(0.0,0.0,0.0);
+	            case HEALTH:
+	            	glColor3f(0.0,0.0,0.0); // PRETO Aumenta a saúde
 	            	break;
 	            default:
 	            	printf("%d", item[i].type);
@@ -543,17 +544,23 @@ void mouse(int button, int state, int x, int y) {
         atirar(x, y);
     }
 }
-void spawnItem(){
-	for (int i = 0; i<Max_items; i++){
-		if (!item[i].ativo) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            printf("spawn");
-            item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
-            item[i].ativo = 1;
+void spawnItem() {
+    for (int i = 0; i < Max_items; i++) {
+        if (!item[i].ativo) {
+            // Gere um número aleatório entre 0 e 99
+            int chance = rand() % 100;
+
+            // Verifique se o número está dentro dos 50% de chance, se sim, spawne um item
+            if (chance < 50) {
+                item[i].x = rand() % 12;
+                item[i].y = rand() % 12;
+                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+                item[i].ativo = 1;
+                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+            }
+            break;
         }
-          break;
-	}
+    }
 }
 
 void spawnMosquito(){
@@ -662,7 +669,7 @@ void atualizarPosicaoJogador() {
 }
 
 void timer(int value) {
-	 
+	ultimoTempoItem = time(NULL);
 	count_timer_loop += timerloop;
 	if (count_timer_loop >= 1000){// Convertendo milissegundos em segundos
 	count_time_game++; // adicionando 1 segundo no contador do jogo
@@ -699,6 +706,13 @@ void timer(int value) {
 	if (difftime(time(NULL), tempo_ultimo_spawn) * 1000 >= intervalo_spawn) {
         spawnMosquito();
         tempo_ultimo_spawn = time(NULL);
+    }
+    
+    // Spawnando item a cada 5 segundos
+    time_t tempoAtual = time(NULL);
+    if (difftime(tempoAtual, ultimoTempoItem) >= 5) {
+        spawnItem();
+        ultimoTempoItem = tempoAtual;
     }
 
     glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
