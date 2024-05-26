@@ -743,8 +743,6 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 }
 
 int main() {
-
-
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(900, 700);
