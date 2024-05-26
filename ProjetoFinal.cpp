@@ -4,17 +4,21 @@
 #include <math.h>
 #include <time.h>
 
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define Max_items  3
+#define Max_items  10
 #define Max_mosquitoes 100
 #define Max_shots 3 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0, count_message = 0;
 int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
-float tam = 2.0; // tamanho do jogador
+
+float tam = 1.5; 
+float tamp = 5.0;// tamanho do jogador
+float tammos = 4.0;// tamanho do mosquito
 
 float n = 28, m = 20;
 int randomx = 26, randomy = 26;
@@ -25,21 +29,34 @@ bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem; // Tempo de início da mensagem
-GLuint playerTexture; // para carregar a textura do jogador
+
+int variable = 0;
+
+#define NUM_TEXTURES 8
+GLuint playerTextures[NUM_TEXTURES];
+int currentTextureIndex = 0;
+
+
+
 int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
 
-// Fazendo uma struct para cada mosquito
-typedef struct mosquito {
-    GLfloat dx, dy;
-    int life;
+typedef struct {
+    float dx;
+    float dy;
     float velocidade;
+    int life;
+    int textureIndex; // Índice da textura atual
 } Mosquito;
+
+Mosquito mosquitoes[Max_mosquitoes];
+GLuint mosquitosTextures[8]; // Array para armazenar as texturas
 
 typedef struct player {
     GLfloat tx, ty;
     float velocidade;
     int life;
     int count_item;
+    bool armado;
 } Player;
 
 typedef struct shield {
@@ -65,14 +82,14 @@ typedef struct item {
 
 // Definindo a quantidade máxima de itens
 Item item[Max_items];
-// Definindo a quantidade máxima de mosquitos
-Mosquito mosquitoes[Max_mosquitoes];
+
+
 // Definindo a quantidade máxima de mosquitos
 Shot shots[Max_shots];
 // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
 Shield shield = {0, 6.0, 0}; 
 // Definindo o jogador
-Player player = {0, 0, 1.0, 5, 0};
+Player player = {0, 0, 0.5, 5, 0, false};
 
 void desenharCoracao(float x, float y, float tamanho) {
     int i;
@@ -82,7 +99,7 @@ void desenharCoracao(float x, float y, float tamanho) {
     for (i = 0; i < 360; i++) {
         angulo = i * 3.14159 / 180;
         glVertex2f(x + tamanho * (0.75 * sin(angulo) * sin(angulo) * sin(angulo)), 
-                   y + tamanho * (0.6 * cos(angulo) - 0.2 * cos(2 * angulo) - 0.1 * cos(3 * angulo) - 0.05 * cos(4 * angulo)));
+    	y + tamanho * (0.6 * cos(angulo) - 0.2 * cos(2 * angulo) - 0.1 * cos(3 * angulo) - 0.05 * cos(4 * angulo)));
     }
     glEnd();
 }
@@ -140,6 +157,84 @@ void finaliza(){
     exit(0);
 }
 
+void drawMosquito(Mosquito m) {
+    glPushMatrix();
+    glTranslatef(m.dx, m.dy, 0.0f);
+    
+    // Ativa a textura antes de vinculá-la
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, mosquitosTextures[m.textureIndex]);
+    
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0, 1.0, 1.0); // Defina a cor como branca para a textura ser visível
+
+    // Defina as coordenadas de textura para cada vértice
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(-tammos / 2, -tammos / 2);
+    
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f(tammos / 2, -tammos / 2);
+    
+    glTexCoord2f(0.5f, 1.0f);
+    glVertex2f(0.0f, tammos / 2);
+
+    glEnd();
+
+    // Desativa a textura após desenhar
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+}
+void drawAllMosquitoes() {
+    for (int i = 0; i < Max_mosquitoes; i++) {
+        if (mosquitoes[i].life) {
+            drawMosquito(mosquitoes[i]);
+        }
+    }
+}
+void updateMosquitoes() {
+    for (int i = 0; i < Max_mosquitoes; i++) {
+        if (mosquitoes[i].life) {
+            float dx = player.tx - mosquitoes[i].dx;
+            float dy = player.ty - mosquitoes[i].dy;
+            float dist = sqrt(dx * dx + dy * dy);
+            float moveX = (dx / dist) * mosquitoes[i].velocidade;
+            float moveY = (dy / dist) * mosquitoes[i].velocidade;
+
+            mosquitoes[i].dx += moveX;
+            mosquitoes[i].dy += moveY;
+
+            // Calcular o ângulo de movimento
+            float angle = atan2(dy, dx) * 180.0 / M_PI;
+
+            // Atualizar a textura do mosquito com base no ângulo
+            if (angle >= -45 && angle < 45) {
+            	if(variable == 1)
+                mosquitoes[i].textureIndex = 3; // Direita
+                else
+                 mosquitoes[i].textureIndex = 7; 
+            } else if (angle >= 45 && angle < 135) {
+            	if(variable == 1)
+            	
+                mosquitoes[i].textureIndex = 0; // Frente
+                 else
+                  mosquitoes[i].textureIndex = 4; 
+            } else if (angle >= -135 && angle < -45) {
+            	if(variable == 1)
+                mosquitoes[i].textureIndex = 1; // Costas
+                 else
+                 mosquitoes[i].textureIndex = 5; 
+            } else if (angle >= 135 && angle < 225)  {
+            	if(variable == 1)
+                mosquitoes[i].textureIndex = 2; // Esquerda
+                 else
+                 mosquitoes[i].textureIndex = 6; 
+            }
+        }
+    }
+}
+
+
 void desenha() {
 	char scoreText[20];
 	sprintf(scoreText, "Score : %d", score);
@@ -156,14 +251,14 @@ void desenha() {
     // Gota - Jogador
   	glPushMatrix();
     glTranslatef(player.tx, player.ty, 0.0f);
-    glBindTexture(GL_TEXTURE_2D, playerTexture);
+    glBindTexture(GL_TEXTURE_2D, playerTextures[currentTextureIndex]);
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glColor3f(1.0, 1.0, 1.0);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-tam / 2, -tam / 2);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(tam / 2, -tam / 2);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(tam / 2, tam / 2);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tam / 2, tam / 2);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(-tamp / 2, -tamp / 2);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(tamp / 2, -tamp / 2);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(tamp / 2, tamp / 2);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamp / 2, tamp / 2);
     glEnd();
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();
@@ -186,18 +281,9 @@ void desenha() {
         }
     }
 
-    // Triangulo - Mosquitos
-    for (int i = 0; i < count_mosquitoes; i++) {
-        glPushMatrix();
-        glTranslatef(mosquitoes[i].dx, mosquitoes[i].dy, 0.0f);
-        glBegin(GL_TRIANGLES);
-        glColor3f(0.0, 0.0, 0.0);
-        glVertex2f(-tam / 2, -tam / 2);
-        glVertex2f(tam / 2, -tam / 2);
-        glVertex2f(0.0, tam / 2);
-        glEnd();
-        glPopMatrix();
-    }
+	 drawAllMosquitoes();
+
+
 
 	for (int i = 0; i < Max_items; i++) {
 	    if (item[i].ativo) {
@@ -270,19 +356,19 @@ void desenha() {
 	}
 	glFlush();
 }
-
-void carregarTextura(const char* filename) {
+void carregarTextura(const char* filename, GLuint* textureID) {
     int width, height, channels;
     unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
     if (data) {
-        glGenTextures(1, &playerTexture);
-        glBindTexture(GL_TEXTURE_2D, playerTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, (channels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data);
+        glGenTextures(1, textureID);
+        glBindTexture(GL_TEXTURE_2D, *textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, (channels == 4 ? GL_RGBA : GL_RGB), width, height, 0, (channels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         stbi_image_free(data);
+        printf("Textura carregada com sucesso: %s\n", filename);
     } else {
         printf("Falha ao carregar a textura %s \n", filename);
         exit(1);
@@ -297,6 +383,30 @@ void atualizarPosicaoEscudo() {
 }
 
 void inicializa() {
+	glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    carregarTextura("AngeloSprite/Andando pra Frente - Movendo.png", &playerTextures[0]);
+    carregarTextura("AngeloSprite/Andando pra Direita.png", &playerTextures[1]);
+    carregarTextura("AngeloSprite/Andando pra Trás.png", &playerTextures[2]);
+    carregarTextura("AngeloSprite/Andando pra Esquerda.png", &playerTextures[3]);
+    
+    carregarTextura("AngeloSprite/Andando pra Frente - Movendo 2.png", &playerTextures[4]);
+    carregarTextura("AngeloSprite/Andando pra Direita - Movendo 2.png", &playerTextures[5]);
+    carregarTextura("AngeloSprite/Andando pra Trás 2.png", &playerTextures[6]);
+    carregarTextura("AngeloSprite/Andando pra Esquerda 2.png", &playerTextures[7]);
+    
+    carregarTextura("Mosquito/Mosquito de frente.png", &mosquitosTextures[0]);
+    carregarTextura("Mosquito/Mosquito de costas.png", &mosquitosTextures[1]);
+    carregarTextura("Mosquito/Mosquito de esquerda.png", &mosquitosTextures[2]);
+    carregarTextura("Mosquito/Mosquito de direita.png", &mosquitosTextures[3]);
+    
+    carregarTextura("Mosquito/Mosquito de frente2.png", &mosquitosTextures[4]);
+    carregarTextura("Mosquito/Mosquito de costas2.png", &mosquitosTextures[5]);
+    carregarTextura("Mosquito/Mosquito de esquerda2.png", &mosquitosTextures[6]);
+    carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);
+    
+    
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     for (int i = 0; i < Max_shots; i++) {
@@ -429,6 +539,7 @@ void mouse(int button, int state, int x, int y) {
         }
     }
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // Apenas atira se o botão esquerdo do mouse for pressionado
+    if(player.armado == true)
         atirar(x, y);
     }
 }
@@ -440,8 +551,9 @@ void spawnItem(){
             printf("spawn");
             item[i].type = static_cast<ItemType>(rand() % 3); // para 3 itenss
             item[i].ativo = 1;
-            break;
+          
         }
+          break;
 	}
 }
 
@@ -523,15 +635,27 @@ void tecladoUp(unsigned char key, int x, int y) {
 void atualizarPosicaoJogador() {
     if (keys['a']) {
         if (player.tx > -n) player.tx -= player.velocidade;
+        if(variable == 1)
+         currentTextureIndex = 3; else
+         currentTextureIndex = 7;
     }
     if (keys['d']) {
         if (player.tx < n) player.tx += player.velocidade;
+        if(variable == 1)
+         currentTextureIndex = 1;else
+         currentTextureIndex = 5;
     }
     if (keys['w']) {
         if (player.ty < m) player.ty += player.velocidade;
+         if(variable == 1)
+        currentTextureIndex = 2;else
+        currentTextureIndex = 6;
     }
     if (keys['s']) {
         if (player.ty > -m) player.ty -= player.velocidade;
+         if(variable == 1)
+         currentTextureIndex = 0;else
+         currentTextureIndex = 4;
     }
 
     colisao();
@@ -546,13 +670,11 @@ void timer(int value) {
 	count_timer_loop = 0;
 	}
 
-    // Mosquito persegue o jogador
-    for (int i = 0; i < count_mosquitoes; i++) {
-        if (mosquitoes[i].dx < player.tx) mosquitoes[i].dx += mosquitoes[i].velocidade;
-        else if (mosquitoes[i].dx > player.tx) mosquitoes[i].dx -= mosquitoes[i].velocidade;
-        if (mosquitoes[i].dy < player.ty) mosquitoes[i].dy += mosquitoes[i].velocidade;
-        else if (mosquitoes[i].dy > player.ty) mosquitoes[i].dy -= mosquitoes[i].velocidade;
-    }
+
+    // Desenha todos os mosquitos
+    drawAllMosquitoes();
+
+    updateMosquitoes();
    
 	checarColisaoEntreMosquitos();
     moverTiros(); // Atualiza a posição dos tiros
@@ -563,7 +685,7 @@ void timer(int value) {
     colisao();
 
     // Spawn de item
-	if (count_time_game == 3 * aux_count_time) { // Exemplo: a cada 100 ciclos de timer
+	if (count_time_game == 2 * aux_count_time) { // Exemplo: a cada 100 ciclos de timer
         spawnItem();
     }
     // Atualizando o nível a cada 30 segundos
@@ -579,8 +701,19 @@ void timer(int value) {
         spawnMosquito();
         tempo_ultimo_spawn = time(NULL);
     }
-    
+
     glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
+}
+
+void timeranim(int value) {
+    // Alterar o valor da variável
+    variable = !variable;
+
+    // Redesenha a cena
+    glutPostRedisplay();
+
+    // Define o temporizador novamente
+    glutTimerFunc(180, timeranim, 0);
 }
 
 void AlteraTamanhoJanela(GLsizei w, GLsizei h)
@@ -610,6 +743,8 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 }
 
 int main() {
+
+
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(900, 700);
@@ -619,10 +754,9 @@ int main() {
     glutKeyboardUpFunc(tecladoUp); // Registra o callback para quando a tecla é solta
     glutDisplayFunc(desenha);
     glutTimerFunc(50, timer, 0); // Chama a função de timer a cada 50ms
+    glutTimerFunc(0, timeranim, 0);
     inicializa();
     glutReshapeFunc(AlteraTamanhoJanela); // Registra a função AlteraTamanhoJanela
-    carregarTextura("AngeloSprite/Parado virado para frente.png");
-
     glutMainLoop();
     return 0;
 }
