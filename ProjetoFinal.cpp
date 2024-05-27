@@ -8,9 +8,9 @@
 #include <stb_image.h>
 
 #define num_items 4 // Definindo o número de itens presentes no jogo
-#define Max_items 1 // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
+#define Max_items 2 // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
-#define Max_shots 3 // Defina um número máximo para os tiros
+#define Max_shots 30 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0, count_message = 0;
@@ -179,16 +179,19 @@ void drawMosquito(Mosquito m) {
 
     glPopMatrix();
 }
+
+
 void drawAllMosquitoes() {
     for (int i = 0; i < Max_mosquitoes; i++) {
-        if (mosquitoes[i].life) {
+        if (mosquitoes[i].life > 0) { // Certifique-se de que apenas mosquitos vivos sejam desenhados
             drawMosquito(mosquitoes[i]);
         }
     }
 }
+
 void updateMosquitoes() {
     for (int i = 0; i < Max_mosquitoes; i++) {
-        if (mosquitoes[i].life) {
+        if (mosquitoes[i].life > 0) { // Atualize apenas mosquitos vivos
             float dx = player.tx - mosquitoes[i].dx;
             float dy = player.ty - mosquitoes[i].dy;
             float dist = sqrt(dx * dx + dy * dy);
@@ -203,26 +206,13 @@ void updateMosquitoes() {
 
             // Atualizar a textura do mosquito com base no ângulo
             if (angle >= -45 && angle < 45) {
-            	if(variable == 1)
-                mosquitoes[i].textureIndex = 3; // Direita
-                else
-                 mosquitoes[i].textureIndex = 7; 
+                mosquitoes[i].textureIndex = (variable == 1) ? 3 : 7; // Direita
             } else if (angle >= 45 && angle < 135) {
-            	if(variable == 1)
-            	
-                mosquitoes[i].textureIndex = 0; // Frente
-                 else
-                  mosquitoes[i].textureIndex = 4; 
+                mosquitoes[i].textureIndex = (variable == 1) ? 0 : 4; // Frente
             } else if (angle >= -135 && angle < -45) {
-            	if(variable == 1)
-                mosquitoes[i].textureIndex = 1; // Costas
-                 else
-                 mosquitoes[i].textureIndex = 5; 
-            } else if (angle >= 135 && angle < 225)  {
-            	if(variable == 1)
-                mosquitoes[i].textureIndex = 2; // Esquerda
-                 else
-                 mosquitoes[i].textureIndex = 6; 
+                mosquitoes[i].textureIndex = (variable == 1) ? 1 : 5; // Costas
+            } else {
+                mosquitoes[i].textureIndex = (variable == 1) ? 2 : 6; // Esquerda
             }
         }
     }
@@ -422,10 +412,10 @@ void colisao() {
             if (dist < tam) {
                 switch (item[i].type) {
                     case 0:
-                        // armar o jogador com o borrifador
+                         player.armado = true;
                         break;
                     case 1:
-                        shield.ativo;
+                        shield.ativo = 1;
                         break;
                     case 2:
                         score+=15;
@@ -455,7 +445,7 @@ void colisao() {
 	                        mosquitoes[k] = mosquitoes[k + 1];
 	                    }
 	                    count_mosquitoes--;
-	                    score += 75;
+	                    score += 50;
 	                    i--; // Ajuste o índice para verificar o próximo mosquito corretamente
 	                    break;
 	                }
@@ -464,6 +454,7 @@ void colisao() {
 	    }
 	}
 	 time_t tempoAtual = time(NULL); 
+	 
 
     // Colisão com os mosquitos
     for (int i = 0; i < count_mosquitoes; i++) {
@@ -484,15 +475,18 @@ void colisao() {
                 if (dist < tam / 2) {
                     mosquitoes[i].life--;
                     if (mosquitoes[i].life == 0){
-                    	score += 75;
+                    	score += 50;
 					}
                     shots[j].ativo = 0;
                     printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
-                    if (mosquitoes[i].life <= 0) {
+                    
+                    if (mosquitoes[i].life < 1) {
                         // Remove o mosquito
                         for (int k = i; k < count_mosquitoes - 1; k++) {
                             mosquitoes[k] = mosquitoes[k + 1];
+                           
                         }
+                         
                         count_mosquitoes--;
                         i--; // Ajuste o índice para verificar o próximo mosquito corretamente
                         break;
@@ -677,9 +671,7 @@ void timer(int value) {
 	}
 
 
-    // Desenha todos os mosquitos
-    drawAllMosquitoes();
-
+    // Desenha todos os mosquitos    drawAllMosquitoes();
     updateMosquitoes();
    
 	checarColisaoEntreMosquitos();
@@ -691,7 +683,7 @@ void timer(int value) {
     colisao();
 
     // Spawn de item
-	if (count_time_game == 2 * aux_count_time) { // Exemplo: a cada 100 ciclos de timer
+if (count_time_game ==  10 * aux_count_time) {// Exemplo: a cada 100 ciclos de timer
         spawnItem();
     }
     // Atualizando o nível a cada 30 segundos
