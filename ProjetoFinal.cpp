@@ -8,7 +8,7 @@
 #include <stb_image.h>
 
 #define num_items 4 // Definindo o número de itens presentes no jogo
-#define Max_items 2 // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
+#define Max_items 2// quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 30 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
@@ -19,12 +19,15 @@ int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, coun
 float tam = 1.5; 
 float tamp = 5.0;// tamanho do jogador
 float tammos = 4.0;// tamanho do mosquito
+float tamitem = 3.0;// tamanho dos itens
+
+bool equipadoBorriflex = false;
 
 float n = 28, m = 20;
 int randomx = 26, randomy = 26;
 int intervalo_spawn = 3000;
 char mensagem[20];
-bool escudoGirando = true;
+bool escudoGirando = false;
 bool keys[256]; // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
@@ -33,7 +36,7 @@ time_t ultimoTempoItem; //tempo de spawn de item
 
 int variable = 0;
 
-#define NUM_TEXTURES 8
+#define NUM_TEXTURES 16
 GLuint playerTextures[NUM_TEXTURES];
 int currentTextureIndex = 0;
 
@@ -78,6 +81,9 @@ typedef struct item {
 	ItemType type;
 	int ativo;
 } Item;
+
+GLuint ItensTexture[3]; // Array para armazenar as texturas
+int currentItemTextureIndex = 0;
 
 // Definindo a quantidade máxima de itens
 Item item[num_items];
@@ -216,10 +222,12 @@ void updateMosquitoes() {
             }
         }
     }
+     
 }
 
 
 void desenha() {
+	
 	char scoreText[20];
 	sprintf(scoreText, "Score : %d", score);
 	
@@ -246,7 +254,6 @@ void desenha() {
     glEnd();
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();
-
     glutSwapBuffers();
 
     // Tiros
@@ -267,35 +274,54 @@ void desenha() {
 
 	 drawAllMosquitoes();
 	// Desenha item
+	
+	
 	for (int i = 0; i < Max_items; i++) {
-	    if (item[i].ativo) {
-	        glPushMatrix();
-	        glTranslatef(item[i].x, item[i].y, 0.0);
-	        glBegin(GL_QUADS);
-	        switch (item[i].type) {	        	
-	        	case BORRIFEX:
-	                glColor3f(1.0, 0.0, 0.0); // Vermelho para BORRIFEX
-	                break;
-	            case REPELEX:
-	                glColor3f(0.0, 1.0, 0.0); // Verde para REPELEX
-	                break;
-	            case SCORE:
-	                glColor3f(1.0, 1.0, 0.0); // Amarelo para SCORE
-	                break;
-	            case HEALTH:
-	            	glColor3f(0.0,0.0,0.0); // PRETO Aumenta a saúde
-	            	break;
-	            default:
-	            	printf("%d", item[i].type);
-					break;
-	        }
-	        glVertex2f(-tam / 3, -tam / 3);
-	        glVertex2f(tam / 3, -tam / 3);
-	        glVertex2f(tam / 3, tam / 3);
-	        glVertex2f(-tam / 3, tam / 3);
-	        glEnd();
-	        glPopMatrix();
-	    }
+	     if (item[i].ativo) {
+        glPushMatrix();
+        glTranslatef(item[i].x, item[i].y, 0.0);
+
+        switch (item[i].type) {
+            case BORRIFEX:              
+                currentItemTextureIndex = 0;
+                break;
+            case REPELEX:               
+                currentItemTextureIndex = 1;
+                break;
+            case SCORE:               
+                currentItemTextureIndex = 2;
+                break;
+            case HEALTH:
+                glColor3f(0.0, 0.0, 0.0); // PRETO Aumenta a saúde
+                break;
+            default:
+                printf("%d", item[i].type);
+                break;
+        }
+        glEnable(GL_TEXTURE_2D); // Habilitar texturas
+        glBindTexture(GL_TEXTURE_2D, ItensTexture[currentItemTextureIndex]); // Bind a textura
+        glBegin(GL_QUADS);
+
+        // Definir coordenadas de textura e vértices
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(-tamitem / 3, -tamitem / 3);
+
+        glTexCoord2f(1.0, 1.0);
+        glVertex2f(tamitem / 3, -tamitem / 3);
+
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(tamitem / 3, tamitem / 3);
+
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f(-tamitem / 3, tamitem / 3);
+
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D); // Desabilitar texturas
+
+        glPopMatrix();
+        glutSwapBuffers();
+    }
 	    // Item - REPELEX
 	    if (shield.ativo) {
 	        glPushMatrix();
@@ -372,7 +398,7 @@ void atualizarPosicaoEscudo() {
 void inicializa() {
 	glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+//=====================================================================================================   
     carregarTextura("AngeloSprite/Andando pra Frente - Movendo.png", &playerTextures[0]);
     carregarTextura("AngeloSprite/Andando pra Direita.png", &playerTextures[1]);
     carregarTextura("AngeloSprite/Andando pra Trás.png", &playerTextures[2]);
@@ -382,7 +408,19 @@ void inicializa() {
     carregarTextura("AngeloSprite/Andando pra Direita - Movendo 2.png", &playerTextures[5]);
     carregarTextura("AngeloSprite/Andando pra Trás 2.png", &playerTextures[6]);
     carregarTextura("AngeloSprite/Andando pra Esquerda 2.png", &playerTextures[7]);
+//=====================================================================================================   
+ 
+    carregarTextura("AngeloSprite/Atirando pra Frente - Movendo.png", &playerTextures[8]);
+    carregarTextura("AngeloSprite/Atirando pra Direita - Movendo.png", &playerTextures[10]);
+    carregarTextura("AngeloSprite/Atirando pra Trás - Movendo.png", &playerTextures[12]);
+    carregarTextura("AngeloSprite/Atirando pra Esquerda - Movendo.png", &playerTextures[14]);
     
+    carregarTextura("AngeloSprite/Atirando pra Frente - Movendo 2.png", &playerTextures[9]);
+    carregarTextura("AngeloSprite/Atirando pra Direita - Movendo 2.png", &playerTextures[11]);
+    carregarTextura("AngeloSprite/Atirando pra Trás - Movendo 2.png", &playerTextures[13]);
+    carregarTextura("AngeloSprite/Atirando pra Esquerda - Movendo 2.png", &playerTextures[15]);
+//=====================================================================================================    
+
     carregarTextura("Mosquito/Mosquito de frente.png", &mosquitosTextures[0]);
     carregarTextura("Mosquito/Mosquito de costas.png", &mosquitosTextures[1]);
     carregarTextura("Mosquito/Mosquito de esquerda.png", &mosquitosTextures[2]);
@@ -391,7 +429,13 @@ void inicializa() {
     carregarTextura("Mosquito/Mosquito de frente2.png", &mosquitosTextures[4]);
     carregarTextura("Mosquito/Mosquito de costas2.png", &mosquitosTextures[5]);
     carregarTextura("Mosquito/Mosquito de esquerda2.png", &mosquitosTextures[6]);
-    carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);
+    carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);    
+//=====================================================================================================
+    carregarTextura("Itens/Borriflex.png", &ItensTexture[0]);
+    carregarTextura("Itens/Shield.png", &ItensTexture[1]);
+    carregarTextura("Itens/Repelentex.png", &ItensTexture[2]);
+  
+    
     
     
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -413,6 +457,7 @@ void colisao() {
                 switch (item[i].type) {
                     case 0:
                          player.armado = true;
+                         equipadoBorriflex = true;
                         break;
                     case 1:
                         shield.ativo = 1;
@@ -479,11 +524,13 @@ void colisao() {
 					}
                     shots[j].ativo = 0;
                     printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
+                     
                     
                     if (mosquitoes[i].life < 1) {
                         // Remove o mosquito
                         for (int k = i; k < count_mosquitoes - 1; k++) {
                             mosquitoes[k] = mosquitoes[k + 1];
+                             glutSwapBuffers();
                            
                         }
                          
@@ -634,28 +681,71 @@ void tecladoUp(unsigned char key, int x, int y) {
 
 void atualizarPosicaoJogador() {
     if (keys['a']) {
-        if (player.tx > -n) player.tx -= player.velocidade;
-        if(variable == 1)
-         currentTextureIndex = 3; else
-         currentTextureIndex = 7;
+        if (player.tx > -n) player.tx -= player.velocidade;   
+	if (equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 14;
+	    } else {
+	      currentTextureIndex = 15;
+	    }
+	  } else if (!equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 3;
+	    } else {
+	      currentTextureIndex = 7;
+	    }
+	  }        
     }
-    if (keys['d']) {
-        if (player.tx < n) player.tx += player.velocidade;
-        if(variable == 1)
-         currentTextureIndex = 1;else
-         currentTextureIndex = 5;
-    }
+	if (keys['d']) {
+	  if (player.tx < n) player.tx += player.velocidade;
+	  if (equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 10;
+	    } else {
+	      currentTextureIndex = 11;
+	    }
+	  } else if (!equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 1;
+	    } else {
+	      currentTextureIndex = 5;
+	    }
+	  }
+	}
     if (keys['w']) {
         if (player.ty < m) player.ty += player.velocidade;
-         if(variable == 1)
-        currentTextureIndex = 2;else
-        currentTextureIndex = 6;
+        
+
+ 	if (equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 12;
+	    } else {
+	      currentTextureIndex = 13;
+	    }
+	  } else if (!equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 2;
+	    } else {
+	      currentTextureIndex = 6;
+	    }
+	  }   
     }
     if (keys['s']) {
         if (player.ty > -m) player.ty -= player.velocidade;
-         if(variable == 1)
-         currentTextureIndex = 0;else
-         currentTextureIndex = 4;
+        
+ 	if (equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 9;
+	    } else {
+	      currentTextureIndex = 8;
+	    }
+	  } else if (!equipadoBorriflex) {
+	    if (variable == 1) {
+	      currentTextureIndex = 0;
+	    } else {
+	      currentTextureIndex = 4;
+	    }
+	  }   
     }
 
     colisao();
@@ -683,7 +773,7 @@ void timer(int value) {
     colisao();
 
     // Spawn de item
-if (count_time_game ==  10 * aux_count_time) {// Exemplo: a cada 100 ciclos de timer
+if (count_time_game ==  1 * aux_count_time) {// Exemplo: a cada 100 ciclos de timer
         spawnItem();
     }
     // Atualizando o nível a cada 30 segundos
