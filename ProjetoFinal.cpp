@@ -36,6 +36,8 @@ time_t ultimoTempoItem; //tempo de spawn de item
 
 int variable = 0;
 
+bool isPaused = false;
+
 #define NUM_TEXTURES 16
 GLuint playerTextures[NUM_TEXTURES];
 int currentTextureIndex = 0;
@@ -82,7 +84,7 @@ typedef struct item {
 	int ativo;
 } Item;
 
-GLuint ItensTexture[3]; // Array para armazenar as texturas
+GLuint ItensTexture[4]; // Array para armazenar as texturas
 int currentItemTextureIndex = 0;
 
 // Definindo a quantidade máxima de itens
@@ -182,8 +184,8 @@ void drawMosquito(Mosquito m) {
 
     // Desativa a textura após desenhar
     glDisable(GL_TEXTURE_2D);
-
     glPopMatrix();
+    glutSwapBuffers();
 }
 
 
@@ -225,9 +227,11 @@ void updateMosquitoes() {
      
 }
 
-
 void desenha() {
 	
+	glClear(GL_COLOR_BUFFER_BIT);
+
+
 	char scoreText[20];
 	sprintf(scoreText, "Score : %d", score);
 	
@@ -292,7 +296,7 @@ void desenha() {
                 currentItemTextureIndex = 2;
                 break;
             case HEALTH:
-                glColor3f(0.0, 0.0, 0.0); // PRETO Aumenta a saúde
+                currentItemTextureIndex = 3;
                 break;
             default:
                 printf("%d", item[i].type);
@@ -328,15 +332,29 @@ void desenha() {
 	        glTranslatef(player.tx, player.ty, 0.0f);
 	        float escudoX = shield.radius * cos(shield.angle);
 	        float escudoY = shield.radius * sin(shield.angle);
+	        glEnable(GL_TEXTURE_2D); // Habilitar texturas
+       		glBindTexture(GL_TEXTURE_2D, ItensTexture[1]); // Bind a textura
+       
 	        glTranslatef(escudoX, escudoY, 0.0f);
+	       
 	        glBegin(GL_QUADS);
-	        glColor3f(1.0, 1.0, 0.0); // Cor amarela para o escudo
-	        glVertex2f(-tam / 4, -tam / 4);
-	        glVertex2f(tam / 4, -tam / 4);
-	        glVertex2f(tam / 4, tam / 4);
-	        glVertex2f(-tam / 4, tam / 4);
+			  
+			glTexCoord2f(0.0, 1.0);
+		    glVertex2f(-tamitem / 3, -tamitem / 3);
+		    
+		    glTexCoord2f(1.0, 1.0);
+		    glVertex2f(tamitem / 3, -tamitem / 3);
+		    
+		    glTexCoord2f(1.0, 0.0);
+		    glVertex2f(tamitem / 3, tamitem / 3);
+		    
+		    glTexCoord2f(0.0, 0.0);
+		    glVertex2f(-tamitem / 3, tamitem / 3);
+
 	        glEnd();
+	        glDisable(GL_TEXTURE_2D);
 	        glPopMatrix();
+	        glutSwapBuffers();
     	}
 	}
      
@@ -432,8 +450,9 @@ void inicializa() {
     carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);    
 //=====================================================================================================
     carregarTextura("Itens/Borriflex.png", &ItensTexture[0]);
-    carregarTextura("Itens/Shield.png", &ItensTexture[1]);
+    carregarTextura("Itens/raquete.png", &ItensTexture[1]);
     carregarTextura("Itens/Repelentex.png", &ItensTexture[2]);
+    carregarTextura("Itens/Shield.png", &ItensTexture[3]);
   
     
     
@@ -672,6 +691,13 @@ void checarColisaoEntreMosquitos() {
 }
 
 void teclado(unsigned char key, int x, int y) {
+	 switch (key) {
+        case 'p':
+            isPaused = !isPaused;
+             printf("isPaused: %s\n", isPaused ? "true" : "false");
+            break;
+  
+    }
     keys[key] = true; // Marca a tecla como pressionada
 }
 
@@ -747,12 +773,28 @@ void atualizarPosicaoJogador() {
 	    }
 	  }   
     }
+    
 
     colisao();
-    glutPostRedisplay();
+    
 }
 
+/*void keyboardp(unsigned char key, int x, int y) {
+    switch (key) {
+        case 'p':
+            isPaused = !isPaused;
+             printf("isPaused: %s\n", isPaused ? "true" : "false");
+            break;
+  
+    }*/
+
+
+
+
 void timer(int value) {
+	
+	if (!isPaused) {
+	
 	ultimoTempoItem = time(NULL);
 	count_timer_loop += timerloop;
 	if (count_timer_loop >= 1000){// Convertendo milissegundos em segundos
@@ -796,8 +838,12 @@ if (count_time_game ==  1 * aux_count_time) {// Exemplo: a cada 100 ciclos de ti
         spawnItem();
         ultimoTempoItem = tempoAtual;
     }
-
+	}
+	
+	glutPostRedisplay();
+  
     glutTimerFunc(timerloop, timer, 0); // Aumentar a frequência do timer
+
 }
 
 void timeranim(int value) {
@@ -839,17 +885,25 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 
 int main() {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    
+    
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(900, 700);
     glutCreateWindow("Projeto Final - Computacao Grafica\n");
+    
  	glutMouseFunc(mouse);
     glutKeyboardFunc(teclado);
     glutKeyboardUpFunc(tecladoUp); // Registra o callback para quando a tecla é solta
     glutDisplayFunc(desenha);
+  // 	glutKeyboardFunc(keyboardp);
     glutTimerFunc(50, timer, 0); // Chama a função de timer a cada 50ms
+    
     glutTimerFunc(0, timeranim, 0);
+
     inicializa();
     glutReshapeFunc(AlteraTamanhoJanela); // Registra a função AlteraTamanhoJanela
+    
     glutMainLoop();
+     
     return 0;
 }
