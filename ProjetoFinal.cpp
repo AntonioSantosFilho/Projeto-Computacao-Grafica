@@ -7,14 +7,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define num_items 4 // Definindo o número de itens presentes no jogo
+#define num_items 5 // Definindo o número de itens presentes no jogo
 #define Max_items 2// quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 30 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0, count_message = 0;
-int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, score = 0, level = 0;
+int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, aux_count_item=1, score = 0, level = 0;
 
 float tam = 1.5; 
 float tamp = 5.0;// tamanho do jogador
@@ -76,7 +76,7 @@ typedef struct shot {
     int ativo; // 0 = inativo, 1 = ativo
 } Shot;
 
-typedef enum {BORRIFEX, REPELEX, SCORE, HEALTH} ItemType;
+typedef enum {BORRIFEX, REPELEX, RAQUETEX, KIT, NCMTK65} ItemType;
 
 typedef struct item {
 	GLfloat x, y;
@@ -292,11 +292,14 @@ void desenha() {
             case REPELEX:               
                 currentItemTextureIndex = 1;
                 break;
-            case SCORE:               
+            case RAQUETEX:               
                 currentItemTextureIndex = 2;
                 break;
-            case HEALTH:
+            case KIT:
                 currentItemTextureIndex = 3;
+                break;
+            case NCMTK65:
+                currentItemTextureIndex = 5;
                 break;
             default:
                 printf("%d", item[i].type);
@@ -453,9 +456,8 @@ void inicializa() {
     carregarTextura("Itens/raquete.png", &ItensTexture[1]);
     carregarTextura("Itens/Repelentex.png", &ItensTexture[2]);
     carregarTextura("Itens/Shield.png", &ItensTexture[3]);
-  
-    
-    
+    carregarTextura("itens/Kit.png", &ItensTexture[4]);
+    carregarTextura("itens/NCM-TK65.png", &ItensTexture[5]);
     
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -815,7 +817,8 @@ void timer(int value) {
     colisao();
 
     // Spawn de item
-if (count_time_game ==  1 * aux_count_time) {// Exemplo: a cada 100 ciclos de timer
+if (count_time_game ==  3 * aux_count_item) {// Exemplo: a cada x segundos
+		aux_count_item++;
         spawnItem();
     }
     // Atualizando o nível a cada 30 segundos
