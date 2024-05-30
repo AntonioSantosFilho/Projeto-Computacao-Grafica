@@ -8,7 +8,7 @@
 #include <stb_image.h>
 
 #define num_items 5 // Definindo o número de itens presentes no jogo
-#define Max_items 2// quantidade maxima de itens que pode estar ao mesmo tempo no jogo
+#define Max_items 7// quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 30 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
@@ -22,6 +22,7 @@ float tammos = 4.0;// tamanho do mosquito
 float tamitem = 3.0;// tamanho dos itens
 
 bool equipadoBorriflex = false;
+bool equipadoNCMTK65 = false;
 
 float n = 28, m = 20;
 int randomx = 26, randomy = 26;
@@ -38,11 +39,15 @@ int variable = 0;
 
 bool isPaused = false;
 
-#define NUM_TEXTURES 16
+#define NUM_TEXTURES 24
 GLuint playerTextures[NUM_TEXTURES];
+GLuint EfectTextures[NUM_TEXTURES];
 int currentTextureIndex = 0;
 
 int mostrar_mensagem = 0; // Flag para indicar se a mensagem deve ser mostrada
+
+typedef enum {BORRIFEX, REPELEX, RAQUETEX, KIT, NCMTK65} ItemType;
+typedef enum {DEFAULT, CHAMA} ShotType;
 
 typedef struct mosquito{
     float dx;
@@ -74,9 +79,9 @@ typedef struct shot {
     GLfloat dx, dy; // Direcao que o mesmo esta olhandos
     float velocidade;
     int ativo; // 0 = inativo, 1 = ativo
+    GLuint texture;
+    ShotType type; // tipo de tiro
 } Shot;
-
-typedef enum {BORRIFEX, REPELEX, RAQUETEX, KIT, NCMTK65} ItemType;
 
 typedef struct item {
 	GLfloat x, y;
@@ -244,7 +249,7 @@ void desenha() {
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Gota - Jogador
+    // Angelo - Player
   	glPushMatrix();
     glTranslatef(player.tx, player.ty, 0.0f);
     glBindTexture(GL_TEXTURE_2D, playerTextures[currentTextureIndex]);
@@ -262,7 +267,8 @@ void desenha() {
 
     // Tiros
     for (int i = 0; i < Max_shots; i++) {
-        if (shots[i].ativo) {
+    	if (equipadoBorriflex){
+    		if (shots[i].ativo) {
             glPushMatrix();
             glTranslatef(shots[i].x, shots[i].y, 0.0f);
             glBegin(GL_QUADS);
@@ -273,20 +279,39 @@ void desenha() {
             glVertex2f(-tam / 8, tam / 8);
             glEnd();
             glPopMatrix();
+        	}
+		}
+        if (equipadoNCMTK65) {
+            if (shots[i].ativo) {
+                glPushMatrix();
+                glTranslatef(shots[i].x, shots[i].y, 0.0f);
+                glEnable(GL_TEXTURE_2D);
+                // Escolher a textura correta com base na direção do tiro
+                glBindTexture(GL_TEXTURE_2D, EfectTextures[0]);
+                glBegin(GL_QUADS);
+                glColor3f(1.0, 1.0, 1.0); // Cor branca para a textura ser visível
+                glTexCoord2f(0.0f, 0.0f); glVertex2f(-tamp / 2, -tamp / 2);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2f(tamp / 2, -tamp / 2);
+			    glTexCoord2f(1.0f, 1.0f); glVertex2f(tamp / 2, tamp / 2);
+			    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamp / 2, tamp / 2);
+                glEnd();
+                glDisable(GL_TEXTURE_2D);
+                glPopMatrix();
+                glutSwapBuffers();
+            }
         }
     }
 
 	 drawAllMosquitoes();
+
 	// Desenha item
-	
-	
 	for (int i = 0; i < Max_items; i++) {
 	     if (item[i].ativo) {
         glPushMatrix();
         glTranslatef(item[i].x, item[i].y, 0.0);
 
         switch (item[i].type) {
-            case BORRIFEX:              
+            case BORRIFEX:      
                 currentItemTextureIndex = 0;
                 break;
             case REPELEX:               
@@ -430,7 +455,7 @@ void inicializa() {
     carregarTextura("AngeloSprite/Andando pra Trás 2.png", &playerTextures[6]);
     carregarTextura("AngeloSprite/Andando pra Esquerda 2.png", &playerTextures[7]);
 //=====================================================================================================   
- 
+ 	//Tiros DEFAULT
     carregarTextura("AngeloSprite/Atirando pra Frente - Movendo.png", &playerTextures[8]);
     carregarTextura("AngeloSprite/Atirando pra Direita - Movendo.png", &playerTextures[10]);
     carregarTextura("AngeloSprite/Atirando pra Trás - Movendo.png", &playerTextures[12]);
@@ -440,6 +465,18 @@ void inicializa() {
     carregarTextura("AngeloSprite/Atirando pra Direita - Movendo 2.png", &playerTextures[11]);
     carregarTextura("AngeloSprite/Atirando pra Trás - Movendo 2.png", &playerTextures[13]);
     carregarTextura("AngeloSprite/Atirando pra Esquerda - Movendo 2.png", &playerTextures[15]);
+    
+    //Tiros CHAMA
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra frente.png", &playerTextures[16]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra frente2.png", &playerTextures[17]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra trás.png", &playerTextures[18]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra trás2.png", &playerTextures[19]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra esquerda.png", &playerTextures[20]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra esquerda2.png", &playerTextures[21]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra direita.png", &playerTextures[22]);
+    carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra direita2.png", &playerTextures[23]);
+    
+    
 //=====================================================================================================    
 
     carregarTextura("Mosquito/Mosquito de frente.png", &mosquitosTextures[0]);
@@ -455,9 +492,13 @@ void inicializa() {
     carregarTextura("Itens/Borriflex.png", &ItensTexture[0]);
     carregarTextura("Itens/raquete.png", &ItensTexture[1]);
     carregarTextura("Itens/Repelentex.png", &ItensTexture[2]);
-    carregarTextura("Itens/Shield.png", &ItensTexture[3]);
-    carregarTextura("itens/Kit.png", &ItensTexture[4]);
+    carregarTextura("Itens/Kit.png", &ItensTexture[3]);
     carregarTextura("itens/NCM-TK65.png", &ItensTexture[5]);
+//=====================================================================================================
+	carregarTextura("itens/Efeitos/Fogo do lancachamas Direita.png", &EfectTextures[0]);
+	carregarTextura("itens/Efeitos/Fogo do lancachamas Trás.png", &EfectTextures[1]);
+	carregarTextura("itens/Efeitos/Fogo do lancachamas Esquerda.png", &EfectTextures[2]);
+	carregarTextura("itens/Efeitos/Fogo do lancachamas Frente.png", &EfectTextures[3]);
     
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -478,7 +519,8 @@ void colisao() {
                 switch (item[i].type) {
                     case 0:
                          player.armado = true;
-                         equipadoBorriflex = true;
+                         equipadoBorriflex  = true;
+                         equipadoNCMTK65 = false;
                         break;
                     case 1:
                         shield.ativo = 1;
@@ -488,6 +530,11 @@ void colisao() {
                         break;
                     case 3:
                     	player.life++;
+                    	break;
+                    case 4:
+                    	player.armado = true;
+                    	equipadoNCMTK65 = true;
+                    	equipadoBorriflex = false;
                     	break;
                     default:
                     	break;
@@ -710,13 +757,25 @@ void tecladoUp(unsigned char key, int x, int y) {
 void atualizarPosicaoJogador() {
     if (keys['a']) {
         if (player.tx > -n) player.tx -= player.velocidade;   
-	if (equipadoBorriflex) {
-	    if (variable == 1) {
-	      currentTextureIndex = 14;
-	    } else {
-	      currentTextureIndex = 15;
-	    }
-	  } else if (!equipadoBorriflex) {
+	if (equipadoBorriflex || equipadoNCMTK65) {
+		if (equipadoBorriflex){
+			equipadoNCMTK65 = false;
+			if (variable == 1) {
+	      		currentTextureIndex = 14;
+		    } else {
+		      	currentTextureIndex = 15;
+		    }
+		}
+		if (equipadoNCMTK65){
+			equipadoBorriflex = false;
+			if (variable == 1) {
+	      		currentTextureIndex = 20;
+		    } else {
+		      	currentTextureIndex = 21;
+		    }
+		}
+	    
+	  } else if (!equipadoBorriflex || !equipadoNCMTK65) {
 	    if (variable == 1) {
 	      currentTextureIndex = 3;
 	    } else {
@@ -726,13 +785,27 @@ void atualizarPosicaoJogador() {
     }
 	if (keys['d']) {
 	  if (player.tx < n) player.tx += player.velocidade;
-	  if (equipadoBorriflex) {
-	    if (variable == 1) {
-	      currentTextureIndex = 10;
-	    } else {
-	      currentTextureIndex = 11;
-	    }
-	  } else if (!equipadoBorriflex) {
+	  if (equipadoBorriflex || equipadoNCMTK65) {
+	  	if (equipadoBorriflex){
+	  		equipadoNCMTK65 = false;
+	  		if (variable == 1) {
+	      		currentTextureIndex = 10;
+		    }
+			else {
+		      currentTextureIndex = 11;
+		    }
+		}
+		if (equipadoNCMTK65){
+			equipadoBorriflex = false;
+			if (variable == 1) {
+	      		currentTextureIndex = 22;
+		    }
+			else {
+		      currentTextureIndex = 23;
+		    }
+		}
+	    
+	  } else if (!equipadoBorriflex || !equipadoNCMTK65) {
 	    if (variable == 1) {
 	      currentTextureIndex = 1;
 	    } else {
@@ -744,13 +817,27 @@ void atualizarPosicaoJogador() {
         if (player.ty < m) player.ty += player.velocidade;
         
 
- 	if (equipadoBorriflex) {
-	    if (variable == 1) {
-	      currentTextureIndex = 12;
-	    } else {
-	      currentTextureIndex = 13;
-	    }
-	  } else if (!equipadoBorriflex) {
+ 	if (equipadoBorriflex || equipadoNCMTK65){
+ 		if(equipadoBorriflex){
+ 			equipadoNCMTK65 = false;
+ 			if (variable == 1) {
+	      		currentTextureIndex = 12;
+		    }
+			else {
+		      	currentTextureIndex = 13;
+		    }
+		 }
+		 if (equipadoNCMTK65){
+		 	equipadoBorriflex = false;
+		 	if (variable == 1) {
+	      		currentTextureIndex = 18;
+		    }
+			else {
+		      	currentTextureIndex = 19;
+		    }
+		 }
+	    
+	  } else if (!equipadoBorriflex || !equipadoNCMTK65) {
 	    if (variable == 1) {
 	      currentTextureIndex = 2;
 	    } else {
@@ -761,13 +848,25 @@ void atualizarPosicaoJogador() {
     if (keys['s']) {
         if (player.ty > -m) player.ty -= player.velocidade;
         
- 	if (equipadoBorriflex) {
-	    if (variable == 1) {
-	      currentTextureIndex = 9;
-	    } else {
-	      currentTextureIndex = 8;
-	    }
-	  } else if (!equipadoBorriflex) {
+ 	if (equipadoBorriflex || equipadoNCMTK65) {
+ 		if (equipadoBorriflex){
+ 			equipadoNCMTK65 = false;
+ 			if (variable == 1) {
+	      		currentTextureIndex = 8;
+		    } else {
+		      	currentTextureIndex = 9;
+		    }
+		 }
+		if (equipadoNCMTK65){
+			equipadoBorriflex = false;
+			if (variable == 1) {
+	      		currentTextureIndex = 16;
+		    } else {
+		      	currentTextureIndex = 17;
+		    }
+		}
+	    
+	  } else if (!equipadoBorriflex || !equipadoNCMTK65) {
 	    if (variable == 1) {
 	      currentTextureIndex = 0;
 	    } else {
@@ -775,23 +874,10 @@ void atualizarPosicaoJogador() {
 	    }
 	  }   
     }
-    
 
     colisao();
     
 }
-
-/*void keyboardp(unsigned char key, int x, int y) {
-    switch (key) {
-        case 'p':
-            isPaused = !isPaused;
-             printf("isPaused: %s\n", isPaused ? "true" : "false");
-            break;
-  
-    }*/
-
-
-
 
 void timer(int value) {
 	
@@ -898,7 +984,6 @@ int main() {
     glutKeyboardFunc(teclado);
     glutKeyboardUpFunc(tecladoUp); // Registra o callback para quando a tecla é solta
     glutDisplayFunc(desenha);
-  // 	glutKeyboardFunc(keyboardp);
     glutTimerFunc(50, timer, 0); // Chama a função de timer a cada 50ms
     
     glutTimerFunc(0, timeranim, 0);
@@ -907,6 +992,6 @@ int main() {
     glutReshapeFunc(AlteraTamanhoJanela); // Registra a função AlteraTamanhoJanela
     
     glutMainLoop();
-     
+    
     return 0;
 }
