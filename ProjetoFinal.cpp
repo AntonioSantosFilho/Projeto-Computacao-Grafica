@@ -7,6 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define TAM_HITBOX_CHAMA 8.0 // Ajuste conforme necessário
 #define num_items 5 // Definindo o número de itens presentes no jogo
 #define Max_items 7// quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
@@ -236,7 +237,6 @@ void desenha() {
 	
 	glClear(GL_COLOR_BUFFER_BIT);
 
-
 	char scoreText[20];
 	sprintf(scoreText, "Score : %d", score);
 	
@@ -290,10 +290,10 @@ void desenha() {
                 glBindTexture(GL_TEXTURE_2D, EfectTextures[0]);
                 glBegin(GL_QUADS);
                 glColor3f(1.0, 1.0, 1.0); // Cor branca para a textura ser visível
-                glTexCoord2f(0.0f, 0.0f); glVertex2f(-tamp / 2, -tamp / 2);
-			    glTexCoord2f(1.0f, 0.0f); glVertex2f(tamp / 2, -tamp / 2);
-			    glTexCoord2f(1.0f, 1.0f); glVertex2f(tamp / 2, tamp / 2);
-			    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamp / 2, tamp / 2);
+                glTexCoord2f(0.0f, 0.0f); glVertex2f(-tamitem, -tamitem);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2f(tamitem, -tamitem);
+			    glTexCoord2f(1.0f, 1.0f); glVertex2f(tamitem, tamitem);
+			    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamitem, tamitem);
                 glEnd();
                 glDisable(GL_TEXTURE_2D);
                 glPopMatrix();
@@ -476,7 +476,6 @@ void inicializa() {
     carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra direita.png", &playerTextures[22]);
     carregarTextura("AngeloSprite/Angelo com lancachamas apontando pra direita2.png", &playerTextures[23]);
     
-    
 //=====================================================================================================    
 
     carregarTextura("Mosquito/Mosquito de frente.png", &mosquitosTextures[0]);
@@ -495,10 +494,7 @@ void inicializa() {
     carregarTextura("Itens/Kit.png", &ItensTexture[3]);
     carregarTextura("itens/NCM-TK65.png", &ItensTexture[5]);
 //=====================================================================================================
-	carregarTextura("itens/Efeitos/Fogo do lancachamas Direita.png", &EfectTextures[0]);
-	carregarTextura("itens/Efeitos/Fogo do lancachamas Trás.png", &EfectTextures[1]);
-	carregarTextura("itens/Efeitos/Fogo do lancachamas Esquerda.png", &EfectTextures[2]);
-	carregarTextura("itens/Efeitos/Fogo do lancachamas Frente.png", &EfectTextures[3]);
+	carregarTextura("itens/Efeitos/Fogo do lancachamas.png", &EfectTextures[0]);
     
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -582,34 +578,28 @@ void colisao() {
         }
 
         // Colisão entre tiros e mosquitos
-        for (int j = 0; j < Max_shots; j++) {
-            if (shots[j].ativo) {
-                dist = sqrt(pow(shots[j].x - mosquitoes[i].dx, 2) + pow(shots[j].y - mosquitoes[i].dy, 2));
-                if (dist < tam / 2) {
-                    mosquitoes[i].life--;
-                    if (mosquitoes[i].life == 0){
-                    	score += 50;
-					}
-                    shots[j].ativo = 0;
-                    printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
-                     
-                    
-                    if (mosquitoes[i].life < 1) {
-                        // Remove o mosquito
-                        for (int k = i; k < count_mosquitoes - 1; k++) {
-                            mosquitoes[k] = mosquitoes[k + 1];
-                             glutSwapBuffers();
-                           
-                        }
-                         
-                        count_mosquitoes--;
-                        i--; // Ajuste o índice para verificar o próximo mosquito corretamente
-                        break;
-                    }
-                }
-            }
-        }
-    }
+        for (int i = 0; i < count_mosquitoes; i++) {
+	        for (int j = 0; j < Max_shots; j++) {
+	            if (shots[j].ativo) {
+	                float dist = sqrt(pow(shots[j].x - mosquitoes[i].dx, 2) + pow(shots[j].y - mosquitoes[i].dy, 2));
+	                float hitbox_tam = (shots[j].type == CHAMA) ? TAM_HITBOX_CHAMA : (tam / 2);
+	                if (dist < hitbox_tam) {
+	                    mosquitoes[i].life--;
+	                    if (mosquitoes[i].life == 0) {
+	                        score += 50;
+	                        // Remove o mosquito
+	                        for (int k = i; k < count_mosquitoes - 1; k++) {
+	                            mosquitoes[k] = mosquitoes[k + 1];
+	                        }
+	                        count_mosquitoes--;
+	                        i--; // Ajuste o índice para verificar o próximo mosquito corretamente
+	                        break;
+                    	}
+                	}
+            	}
+        	}
+    	}
+	}
 }
 
 void atirar(int mouseX, int mouseY) {
@@ -974,7 +964,6 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 
 int main() {
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    
     
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(900, 700);
