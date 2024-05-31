@@ -13,7 +13,7 @@
 #define Max_shots 30 // Defina um número máximo para os tiros
 #define timerloop 30 //definindo o tempo de chamada de timer a cada x milisegundos
 
-int win = 25, count_timer_loop = 0, count_message = 0;
+int win = 25, count_timer_loop = 0, count_message = 0, count_current_weapon, count_current_item;
 int count_time = 1, count_time_game = 0, count_m = 1, colide = 0, dist = 0, count_mosquitoes = 0, aux_count_mosquito = 1, aux_count_time = 1, aux_count_item=1, score = 0, level = 0;
 
 float tam = 1.5; 
@@ -74,6 +74,9 @@ typedef struct player {
     int count_item;
     bool armado;
     ShotType currentShotType; // tipo atual de tiro
+    int currentAmmo;
+    int maxAmmo;
+    
 } Player;
 
 typedef struct shield {
@@ -106,7 +109,7 @@ Shot shots[Max_shots];
 // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
 Shield shield = {0, 6.0, 0}; 
 // Definindo o jogador
-Player player = {0, 0, 0.5, 5, 0, false, DEFAULT};
+Player player = {0, 0, 0.5, 5, 0, false, DEFAULT,0,0};
 
 void desenharCoracao(float x, float y, float tamanho) {
     int i;
@@ -122,6 +125,13 @@ void desenharCoracao(float x, float y, float tamanho) {
 }
 
 void desenhaTexto (void *font, char *string){
+	while (*string){
+		glutBitmapCharacter(font, *string);
+		string++;
+	}
+}
+
+void desenhaInfo (void *font, char *string){
 	while (*string){
 		glutBitmapCharacter(font, *string);
 		string++;
@@ -248,6 +258,9 @@ void desenha() {
 	
 	char time_gameText[20];
 	sprintf(time_gameText, "Tempo: %d", count_time_game);
+	
+	char infoAMMO[20];
+	sprintf(infoAMMO, "Municao: %d/%d", player.currentAmmo, player.maxAmmo);
 	
 	escolheMensagem(level);
 	
@@ -411,8 +424,44 @@ void desenha() {
     	
     	glutTimerFunc(5000, desativarMensagem, 0);
 	}
+	
+	// Desenhando a arma atual na tela
+	if (count_current_weapon){
+		glPushMatrix();
+	    glColor3f(0.0, 0.0, 0.0);
+	    glRasterPos2f(-25, -23); // Posição da informacao da arma
+	    desenhaInfo(GLUT_BITMAP_HELVETICA_18, infoAMMO);
+	    glPopMatrix();
+	    
+		// Desenhando a arma na parte inferior esquerda
+		glPushMatrix();
+	    glTranslatef(-28, -23, 0.0f);
+	    glEnable(GL_TEXTURE_2D); // Habilitar texturas
+       		glBindTexture(GL_TEXTURE_2D, ItensTexture[count_current_item]); // Bind a textura
+	       
+	        glBegin(GL_QUADS);
+			  
+			glTexCoord2f(0.0, 1.0);
+		    glVertex2f(-tamitem / 3, -tamitem / 3);
+		    
+		    glTexCoord2f(1.0, 1.0);
+		    glVertex2f(tamitem / 3, -tamitem / 3);
+		    
+		    glTexCoord2f(1.0, 0.0);
+		    glVertex2f(tamitem / 3, tamitem / 3);
+		    
+		    glTexCoord2f(0.0, 0.0);
+		    glVertex2f(-tamitem / 3, tamitem / 3);
+
+	        glEnd();
+	        glDisable(GL_TEXTURE_2D);
+	        glPopMatrix();
+	        glutSwapBuffers();
+	}
+    
 	glFlush();
 }
+
 void carregarTextura(const char* filename, GLuint* textureID) {
     int width, height, channels;
     unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
@@ -517,6 +566,10 @@ void colisao() {
                          equipadoNCMTK65 = false;
                          spawnBorriflex = false;
                          player.currentShotType = DEFAULT;
+						 player.currentAmmo = 50;
+                         player.maxAmmo = 50;
+                         count_current_weapon= 1;
+                         count_current_item = currentItemTextureIndex;
                         break;
                     case 1:
                         score += 15;
@@ -536,6 +589,10 @@ void colisao() {
                     	spawnNCMTK65 = false;
                     	equipadoBorriflex = false;
                     	player.currentShotType = CHAMA;
+                    	player.currentAmmo = 25;
+                    	player.maxAmmo = 25;
+                    	count_current_weapon = 1;
+                    	count_current_item = currentItemTextureIndex;
                     	break;
                     default:
                     	break;
@@ -639,6 +696,7 @@ void atirar(int mouseX, int mouseY) {
             shots[i].dy = dy / magnitude;
             shots[i].velocidade = 0.9;
             shots[i].ativo = 1;
+            player.currentAmmo--;
             break;
         }
     }
@@ -653,8 +711,11 @@ void mouse(int button, int state, int x, int y) {
         }
     }
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // Apenas atira se o botão esquerdo do mouse for pressionado
-    if(player.armado == true)
-        atirar(x, y);
+    if(player.armado == true){
+    	if (player.currentAmmo < 1){}
+		else atirar(x, y);
+	}
+        
     }
 }
 void spawnItem() {
@@ -668,7 +729,7 @@ void spawnItem() {
         			break;
 				}
 				else{
-					if (chance < 70) {
+					if (chance < 100) {
 		                item[i].x = rand() % 12;
 		                item[i].y = rand() % 12;
 		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
@@ -1067,7 +1128,6 @@ int main() {
     glutKeyboardUpFunc(tecladoUp); // Registra o callback para quando a tecla é solta
     glutDisplayFunc(desenha);
     glutTimerFunc(50, timer, 0); // Chama a função de timer a cada 50ms
-    
     glutTimerFunc(0, timeranim, 0);
 
     inicializa();
