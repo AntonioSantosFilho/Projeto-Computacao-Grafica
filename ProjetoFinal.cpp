@@ -23,6 +23,13 @@ float tamitem = 3.0;// tamanho dos itens
 
 bool equipadoBorriflex = false;
 bool equipadoNCMTK65 = false;
+bool equipadoRepelex = false;
+bool equipadoRaquetex = false;
+
+bool spawnBorriflex = true;
+bool spawnRepelex = true;
+bool spawnRaquetex = true;
+bool spawnNCMTK65 = true;
 
 float n = 28, m = 20;
 int randomx = 26, randomy = 26;
@@ -66,6 +73,7 @@ typedef struct player {
     int life;
     int count_item;
     bool armado;
+    ShotType currentShotType; // tipo atual de tiro
 } Player;
 
 typedef struct shield {
@@ -80,7 +88,6 @@ typedef struct shot {
     float velocidade;
     int ativo; // 0 = inativo, 1 = ativo
     GLuint texture;
-    ShotType type; // tipo de tiro
 } Shot;
 
 typedef struct item {
@@ -99,7 +106,7 @@ Shot shots[Max_shots];
 // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
 Shield shield = {0, 6.0, 0}; 
 // Definindo o jogador
-Player player = {0, 0, 0.5, 5, 0, false};
+Player player = {0, 0, 0.5, 5, 0, false, DEFAULT};
 
 void desenharCoracao(float x, float y, float tamanho) {
     int i;
@@ -265,39 +272,31 @@ void desenha() {
     glutSwapBuffers();
 
     // Tiros
-    for (int i = 0; i < Max_shots; i++) {
-    	if (equipadoBorriflex){
-    		if (shots[i].ativo) {
+     for (int i = 0; i < Max_shots; i++) {
+        if (shots[i].ativo) {
             glPushMatrix();
             glTranslatef(shots[i].x, shots[i].y, 0.0f);
-            glBegin(GL_QUADS);
-            glColor3f(1.0, 0.0, 0.0); // Cor vermelha para os tiros
-            glVertex2f(-tam / 8, -tam / 8);
-            glVertex2f(tam / 8, -tam / 8);
-            glVertex2f(tam / 8, tam / 8);
-            glVertex2f(-tam / 8, tam / 8);
-            glEnd();
-            glPopMatrix();
-        	}
-		}
-        if (equipadoNCMTK65) {
-            if (shots[i].ativo) {
-                glPushMatrix();
-                glTranslatef(shots[i].x, shots[i].y, 0.0f);
+            if (player.currentShotType == DEFAULT) {
+                glBegin(GL_QUADS);
+                glColor3f(1.0, 0.0, 0.0); // Cor vermelha para os tiros DEFAULT
+                glVertex2f(-tam / 8, -tam / 8);
+                glVertex2f(tam / 8, -tam / 8);
+                glVertex2f(tam / 8, tam / 8);
+                glVertex2f(-tam / 8, tam / 8);
+                glEnd();
+            } else if (player.currentShotType == CHAMA) {
                 glEnable(GL_TEXTURE_2D);
-                // Escolher a textura correta com base na direção do tiro
                 glBindTexture(GL_TEXTURE_2D, EfectTextures[0]);
                 glBegin(GL_QUADS);
                 glColor3f(1.0, 1.0, 1.0); // Cor branca para a textura ser visível
                 glTexCoord2f(0.0f, 0.0f); glVertex2f(-tamitem, -tamitem);
-			    glTexCoord2f(1.0f, 0.0f); glVertex2f(tamitem, -tamitem);
-			    glTexCoord2f(1.0f, 1.0f); glVertex2f(tamitem, tamitem);
-			    glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamitem, tamitem);
+                glTexCoord2f(1.0f, 0.0f); glVertex2f(tamitem, -tamitem);
+                glTexCoord2f(1.0f, 1.0f); glVertex2f(tamitem, tamitem);
+                glTexCoord2f(0.0f, 1.0f); glVertex2f(-tamitem, tamitem);
                 glEnd();
                 glDisable(GL_TEXTURE_2D);
-                glPopMatrix();
-                glutSwapBuffers();
             }
+            glPopMatrix();
         }
     }
 
@@ -353,14 +352,14 @@ void desenha() {
         glPopMatrix();
         glutSwapBuffers();
     }
-	    // Item - REPELEX
+	    // Item - RAQUETEX
 	    if (shield.ativo) {
 	        glPushMatrix();
 	        glTranslatef(player.tx, player.ty, 0.0f);
 	        float escudoX = shield.radius * cos(shield.angle);
 	        float escudoY = shield.radius * sin(shield.angle);
 	        glEnable(GL_TEXTURE_2D); // Habilitar texturas
-       		glBindTexture(GL_TEXTURE_2D, ItensTexture[1]); // Bind a textura
+       		glBindTexture(GL_TEXTURE_2D, ItensTexture[2]); // Bind a textura
        
 	        glTranslatef(escudoX, escudoY, 0.0f);
 	       
@@ -488,8 +487,8 @@ void inicializa() {
     carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);    
 //=====================================================================================================
     carregarTextura("Itens/Borriflex.png", &ItensTexture[0]);
-    carregarTextura("Itens/raquete.png", &ItensTexture[1]);
-    carregarTextura("Itens/Repelentex.png", &ItensTexture[2]);
+    carregarTextura("Itens/Repelentex.png", &ItensTexture[1]);
+    carregarTextura("Itens/raquete.png", &ItensTexture[2]);
     carregarTextura("Itens/Kit.png", &ItensTexture[3]);
     carregarTextura("itens/NCM-TK65.png", &ItensTexture[5]);
 //=====================================================================================================
@@ -516,12 +515,17 @@ void colisao() {
                          player.armado = true;
                          equipadoBorriflex  = true;
                          equipadoNCMTK65 = false;
+                         spawnBorriflex = false;
+                         player.currentShotType = DEFAULT;
                         break;
                     case 1:
-                        shield.ativo = 1;
-                        break;
+                        score += 15;
+                        equipadoRepelex = true;
+                        spawnRepelex = false;
                     case 2:
-                        score+=15;
+                        shield.ativo = 1;
+                        equipadoRaquetex = true;
+                        spawnRaquetex = false;
                         break;
                     case 3:
                     	player.life++;
@@ -529,7 +533,9 @@ void colisao() {
                     case 4:
                     	player.armado = true;
                     	equipadoNCMTK65 = true;
+                    	spawnNCMTK65 = false;
                     	equipadoBorriflex = false;
+                    	player.currentShotType = CHAMA;
                     	break;
                     default:
                     	break;
@@ -563,11 +569,14 @@ void colisao() {
 	}
 	 time_t tempoAtual = time(NULL); 
 	 
-
     // Colisão com os mosquitos
     for (int i = 0; i < count_mosquitoes; i++) {
         dist = sqrt(pow(player.tx - mosquitoes[i].dx, 2) + pow(player.ty - mosquitoes[i].dy, 2));
         if (dist < tam && difftime(tempoAtual, ultimoTempoPicada) >= 2) {
+        	if (shield.ativo){
+			shield.ativo = false;// desativa o Raquetex caso tome dano
+			spawnRaquetex = true; // Ligando o spawn do item novamente
+			} 
             player.life--;
             printf("Vida do jogador %d\n", player.life);
             ultimoTempoPicada = tempoAtual; // Atualiza o tempo da última picada
@@ -651,18 +660,89 @@ void mouse(int button, int state, int x, int y) {
 void spawnItem() {
     for (int i = 0; i < Max_items; i++) {
         if (!item[i].ativo) {
-            // Gere um número aleatório entre 0 e 99
-            int chance = rand() % 100;
-
-            // Verifique se o número está dentro dos 50% de chance, se sim, spawne um item
-            if (chance < 50) {
-                item[i].x = rand() % 12;
-                item[i].y = rand() % 12;
-                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
-                item[i].ativo = 1;
-                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
-            }
-            break;
+        	item[i].type = static_cast<ItemType>(rand() % num_items);
+        	int chance = rand() % 100;
+        	
+        	if (item[i].type == 0){
+        		if (equipadoBorriflex || !spawnBorriflex){
+        			break;
+				}
+				else{
+					if (chance < 70) {
+		                item[i].x = rand() % 12;
+		                item[i].y = rand() % 12;
+		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+		                item[i].ativo = 1;
+		                spawnBorriflex = false; // tem que arrumar pra ele poder spawnar novamente
+		                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+	            	}
+	            	break;
+				}
+			}
+			
+			if (item[i].type == 1){
+        		if (equipadoRepelex || !spawnRepelex){
+        			break;
+				}
+				else{
+					if (chance < 40) {
+		                item[i].x = rand() % 12;
+		                item[i].y = rand() % 12;
+		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+		                item[i].ativo = 1;
+		                spawnRepelex = false; // tem que arrumar pra ele poder spawnar novamente
+		                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+	            	}
+	            	break;
+				}
+			}
+			if (item[i].type == 2){
+        		if (shield.ativo || !spawnRaquetex){
+        			break;
+				}
+				else{
+					if (chance < 40) {
+		                item[i].x = rand() % 12;
+		                item[i].y = rand() % 12;
+		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+		                item[i].ativo = 1;
+		                spawnRaquetex = false; // tem que arrumar pra ele poder spawnar novamente
+		                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+	            	}
+	            	break;
+				}
+			}
+			if (item[i].type == 3){
+        		if (player.life < 5){
+        			break;
+				}
+				else{
+					if (chance < 50) {
+		                item[i].x = rand() % 12;
+		                item[i].y = rand() % 12;
+		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+		                item[i].ativo = 1;
+		                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+	            	}
+	            	break;
+				}
+			}
+			if (item[i].type == 4){
+        		if (equipadoNCMTK65 || !spawnNCMTK65){
+        			break;
+				}
+				else{
+					if (chance < 60) {
+		                item[i].x = rand() % 12;
+		                item[i].y = rand() % 12;
+		                item[i].type = static_cast<ItemType>(rand() % num_items); // para num_items definido
+		                item[i].ativo = 1;
+		                spawnNCMTK65 = false; // tem que arrumar pra ele poder spawnar novamente
+		                printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x, item[i].y, item[i].type);
+	            	}
+	            	break;
+				}
+			}
         }
     }
 }
@@ -755,6 +835,7 @@ void atualizarPosicaoJogador() {
 	if (equipadoBorriflex || equipadoNCMTK65) {
 		if (equipadoBorriflex){
 			equipadoNCMTK65 = false;
+			spawnNCMTK65 = true;
 			if (variable == 1) {
 	      		currentTextureIndex = 14;
 		    } else {
@@ -763,6 +844,7 @@ void atualizarPosicaoJogador() {
 		}
 		if (equipadoNCMTK65){
 			equipadoBorriflex = false;
+			spawnBorriflex = true;
 			if (variable == 1) {
 	      		currentTextureIndex = 20;
 		    } else {
@@ -783,6 +865,7 @@ void atualizarPosicaoJogador() {
 	  if (equipadoBorriflex || equipadoNCMTK65) {
 	  	if (equipadoBorriflex){
 	  		equipadoNCMTK65 = false;
+	  		spawnNCMTK65 = true;
 	  		if (variable == 1) {
 	      		currentTextureIndex = 10;
 		    }
@@ -792,6 +875,7 @@ void atualizarPosicaoJogador() {
 		}
 		if (equipadoNCMTK65){
 			equipadoBorriflex = false;
+			spawnBorriflex = true;
 			if (variable == 1) {
 	      		currentTextureIndex = 22;
 		    }
@@ -815,6 +899,7 @@ void atualizarPosicaoJogador() {
  	if (equipadoBorriflex || equipadoNCMTK65){
  		if(equipadoBorriflex){
  			equipadoNCMTK65 = false;
+ 			spawnNCMTK65 = true;
  			if (variable == 1) {
 	      		currentTextureIndex = 12;
 		    }
@@ -824,6 +909,7 @@ void atualizarPosicaoJogador() {
 		 }
 		 if (equipadoNCMTK65){
 		 	equipadoBorriflex = false;
+		 	spawnBorriflex = true;
 		 	if (variable == 1) {
 	      		currentTextureIndex = 18;
 		    }
@@ -846,6 +932,7 @@ void atualizarPosicaoJogador() {
  	if (equipadoBorriflex || equipadoNCMTK65) {
  		if (equipadoBorriflex){
  			equipadoNCMTK65 = false;
+ 			spawnNCMTK65 = true;
  			if (variable == 1) {
 	      		currentTextureIndex = 8;
 		    } else {
@@ -854,6 +941,7 @@ void atualizarPosicaoJogador() {
 		 }
 		if (equipadoNCMTK65){
 			equipadoBorriflex = false;
+			spawnBorriflex = true;
 			if (variable == 1) {
 	      		currentTextureIndex = 16;
 		    } else {
