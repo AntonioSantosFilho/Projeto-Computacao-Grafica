@@ -1122,7 +1122,6 @@ int main() {
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(900, 700);
     glutCreateWindow("Projeto Final - Computacao Grafica\n");
-    
  	glutMouseFunc(mouse);
     glutKeyboardFunc(teclado);
     glutKeyboardUpFunc(tecladoUp); // Registra o callback para quando a tecla é solta
