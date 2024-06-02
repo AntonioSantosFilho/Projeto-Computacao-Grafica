@@ -65,7 +65,7 @@ typedef struct mosquito{
 } Mosquito;
 
 Mosquito mosquitoes[Max_mosquitoes];
-GLuint mosquitosTextures[8]; // Array para armazenar as texturas
+GLuint mosquitosTextures[24]; // Array para armazenar as texturas
 
 typedef struct player {
     GLfloat tx, ty;
@@ -535,6 +535,33 @@ void inicializa() {
     carregarTextura("Mosquito/Mosquito de esquerda2.png", &mosquitosTextures[6]);
     carregarTextura("Mosquito/Mosquito de direita2.png", &mosquitosTextures[7]);    
 //=====================================================================================================
+  
+
+    carregarTextura("Mosquito/Mosquito especial de frente.png", &mosquitosTextures[8]);
+    carregarTextura("Mosquito/Mosquito especial de costas.png", &mosquitosTextures[10]);
+    carregarTextura("Mosquito/Mosquito especial de esquerda.png", &mosquitosTextures[12]);
+    carregarTextura("Mosquito/Mosquito especial de direita.png", &mosquitosTextures[14]);
+    
+    carregarTextura("Mosquito/Mosquito especial de frente 2.png", &mosquitosTextures[9]);
+    carregarTextura("Mosquito/Mosquito especial de costas 2.png", &mosquitosTextures[11]);
+    carregarTextura("Mosquito/Mosquito especial de esquerda 2.png", &mosquitosTextures[13]);
+    carregarTextura("Mosquito/Mosquito especial de direita 2.png", &mosquitosTextures[15]);    
+//=====================================================================================================
+
+  
+
+    carregarTextura("Mosquito/Mosquitao Boss de frente.png", &mosquitosTextures[16]);
+    carregarTextura("Mosquito/Mosquitao Boss de costas.png", &mosquitosTextures[18]);
+    carregarTextura("Mosquito/Mosquitao Boss de esquerda.png", &mosquitosTextures[20]);
+    carregarTextura("Mosquito/Mosquitao Boss de direita.png", &mosquitosTextures[22]);
+    
+    carregarTextura("Mosquito/Mosquitao Boss de frente 2.png", &mosquitosTextures[17]);
+    carregarTextura("Mosquito/Mosquitao Boss de costas 2.png", &mosquitosTextures[19]);
+    carregarTextura("Mosquito/Mosquitao Boss de esquerda 2.png", &mosquitosTextures[21]);
+    carregarTextura("Mosquito/Mosquitao Boss de direita 2.png", &mosquitosTextures[23]);    
+//=====================================================================================================
+
+
     carregarTextura("Itens/Borriflex.png", &ItensTexture[0]);
     carregarTextura("Itens/Repelentex.png", &ItensTexture[1]);
     carregarTextura("Itens/raquete.png", &ItensTexture[2]);
