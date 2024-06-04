@@ -781,12 +781,37 @@ void colisao() {//  João Pedro
       if (shots[j].ativo) {
         dist = sqrt(pow(shots[j].x - mosquitoes[i].dx, 2) +
                     pow(shots[j].y - mosquitoes[i].dy, 2));
-        if (dist < tam / 2) {
-          mosquitoes[i].life--;
-          if (mosquitoes[i].life == 0) {
-            score += 50;
+        
+		if (player.currentShotType == DEFAULT){
+			if (dist < tam / 2) {
+	          mosquitoes[i].life--;
+	          if (mosquitoes[i].life == 0) {
+	            score += 50;
           }
           shots[j].ativo = 0;
+          printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
+
+          	if (mosquitoes[i].life < 1) {
+            // Remove o mosquito
+            for (int k = i; k < count_mosquitoes - 1; k++) {
+              mosquitoes[k] = mosquitoes[k + 1];
+              glutSwapBuffers();
+            }
+
+            count_mosquitoes--;
+            i--;  // Ajuste o índice para verificar o próximo mosquito
+                  // corretamente
+            break;
+          }
+        	}
+		}
+		else if (player.currentShotType == CHAMA){
+			if (dist < 2*tam) {
+          		mosquitoes[i].life--;
+          	if (mosquitoes[i].life == 0) {
+            	score += 50;
+          	}
+          shots[j].ativo = 1;
           printf("Mosquito atingido! Vida restante: %d\n", mosquitoes[i].life);
 
           if (mosquitoes[i].life < 1) {
@@ -801,7 +826,9 @@ void colisao() {//  João Pedro
                   // corretamente
             break;
           }
-        }
+          }
+		}
+		
       }
     }
   }
@@ -1180,7 +1207,6 @@ void timer(int value) {//  João Pedro
       count_time_game++;  // adicionando 1 segundo no contador do jogo
       count_timer_loop = 0;
     }
-
     // Desenha todos os mosquitos    drawAllMosquitoes();
     updateMosquitoes();
 
@@ -1264,7 +1290,6 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)//  João Pedro
         win = 45.0f * largura / altura;           
     }
 }
-
 
 int main() {//  João Pedro
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
