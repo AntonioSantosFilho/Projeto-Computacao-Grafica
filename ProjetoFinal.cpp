@@ -8,12 +8,10 @@
 #include <stb_image.h>
 
 #define num_items 5  // Definindo o número de itens presentes no jogo
-#define Max_items \
-  7  // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
+#define Max_items 7  // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 30  // Defina um número máximo para os tiros
-#define timerloop \
-  30  // definindo o tempo de chamada de timer a cada x milisegundos
+#define timerloop 30  // definindo o tempo de chamada de timer a cada x milisegundos
 
 int win = 25, count_timer_loop = 0, count_message = 0, count_current_weapon,
     count_current_item;
@@ -62,7 +60,7 @@ int mostrar_mensagem = 0;  // Flag para indicar se a mensagem deve ser mostrada
 typedef enum { BORRIFEX, REPELEX, RAQUETEX, KIT, NCMTK65 } ItemType;
 typedef enum { DEFAULT, CHAMA } ShotType;
 
-typedef struct mosquito {
+typedef struct mosquito {//  João Pedro
   float dx;
   float dy;
   float velocidade;
@@ -73,7 +71,7 @@ typedef struct mosquito {
 Mosquito mosquitoes[Max_mosquitoes];
 GLuint mosquitosTextures[24];  // Array para armazenar as texturas
 
-typedef struct player {
+typedef struct player {//  João Pedro
   GLfloat tx, ty;
   float velocidade;
   int life;
@@ -99,7 +97,7 @@ typedef struct shot {
   GLuint texture;
 } Shot;
 
-typedef struct item {
+typedef struct item {//  João Pedro
   GLfloat x, y;
   ItemType type;
   int ativo;
@@ -117,7 +115,7 @@ Shield shield = {0, 6.0, 0};
 // Definindo o jogador
 Player player = {0, 0, 0.5, 5, 0, false, DEFAULT, 0, 0};
 
-void desenharCoracao(float x, float y, float tamanho) {
+void desenharCoracao(float x, float y, float tamanho) {//  João Pedro
   int i;
   float angulo;
   glBegin(GL_POLYGON);
@@ -131,37 +129,33 @@ void desenharCoracao(float x, float y, float tamanho) {
   glEnd();
 }
 
-void desenhaTexto(void *font, char *string) {
+void desenhaTexto(void *font, char *string) {//  João Pedro
   while (*string) {
     glutBitmapCharacter(font, *string);
     string++;
   }
 }
 
-void desenhaInfo(void *font, char *string) {
+void desenhaInfo(void *font, char *string) {//  João Pedro
   while (*string) {
     glutBitmapCharacter(font, *string);
     string++;
   }
 }
 
-
-
-
-
-void desenhaTimer(void *font, char *string) {
+void desenhaTimer(void *font, char *string) {//  João Pedro
   while (*string) {
     glutBitmapCharacter(font, *string);
     string++;
   }
 }
-void desenhaMensagem(void *font, char *string) {
+void desenhaMensagem(void *font, char *string) {//  João Pedro
   while (*string) {
     glutBitmapCharacter(font, *string);
     string++;
   }
 }
-void escolheMensagem(int level) {
+void escolheMensagem(int level) {//  João Pedro
   switch (level) {
     case 1:
       sprintf(mensagem,
@@ -197,11 +191,11 @@ void escolheMensagem(int level) {
   }
 }
 
-void desativarMensagem(int value) {
+void desativarMensagem(int value) {//  João Pedro
   count_message = 0;
   glutPostRedisplay();
 }
-void finaliza() {
+void finaliza() {//  João Pedro
   printf("Seu Score foi : %d\n", score);
   exit(0);
 }
@@ -299,7 +293,7 @@ void desenhaMapa() {
   glPopMatrix();
 }
 
-void desenha() {
+void desenha() {//  João Pedro
 	
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -688,7 +682,7 @@ void inicializa() {
       time(NULL) - 1;  // Inicializa como se tivesse passado 3 segundos
 }
 
-void colisao() {
+void colisao() {//  João Pedro
   // Colisão com o Item
   for (int i = 0; i < Max_items; i++) {
     if (item[i].ativo) {
@@ -766,7 +760,7 @@ void colisao() {
   time_t tempoAtual = time(NULL);
 
   // Colisão com os mosquitos
-  for (int i = 0; i < count_mosquitoes; i++) {
+  for (int i = 0; i < count_mosquitoes; i++) {//  João Pedro
     dist = sqrt(pow(player.tx - mosquitoes[i].dx, 2) +
                 pow(player.ty - mosquitoes[i].dy, 2));
     if (dist < tam && difftime(tempoAtual, ultimoTempoPicada) >= 2) {
@@ -861,7 +855,7 @@ void mouse(int button, int state, int x, int y) {
     }
   }
 }
-void spawnItem() {
+void spawnItem() {//  João Pedro
   for (int i = 0; i < Max_items; i++) {
     if (!item[i].ativo) {
       item[i].type = static_cast<ItemType>(rand() % num_items);
@@ -960,7 +954,7 @@ void spawnItem() {
   }
 }
 
-void spawnMosquito() {
+void spawnMosquito() {//  João Pedro
   if (count_mosquitoes < Max_mosquitoes) {
     aux_count_mosquito++;
 
@@ -1178,7 +1172,7 @@ void atualizarPosicaoJogador() {
   colisao();
 }
 
-void timer(int value) {
+void timer(int value) {//  João Pedro
   if (!isPaused) {
     ultimoTempoItem = time(NULL);
     count_timer_loop += timerloop;
@@ -1245,7 +1239,7 @@ void timeranim(int value) {
   glutTimerFunc(180, timeranim, 0);
 }
 
-void AlteraTamanhoJanela(GLsizei w, GLsizei h)
+void AlteraTamanhoJanela(GLsizei w, GLsizei h)//  João Pedro
 {
     GLsizei largura, altura;
 
@@ -1272,7 +1266,7 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 }
 
 
-int main() {
+int main() {//  João Pedro
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 
   glutInitWindowPosition(0, 0);
@@ -1280,8 +1274,7 @@ int main() {
   glutCreateWindow("Projeto Final - Computacao Grafica\n");
   glutMouseFunc(mouse);
   glutKeyboardFunc(teclado);
-  glutKeyboardUpFunc(
-      tecladoUp);  // Registra o callback para quando a tecla é solta
+  glutKeyboardUpFunc(tecladoUp);  // Registra o callback para quando a tecla é solta
   glutDisplayFunc(desenha);
   glutTimerFunc(50, timer, 0);  // Chama a função de timer a cada 50ms
   glutTimerFunc(0, timeranim, 0);
