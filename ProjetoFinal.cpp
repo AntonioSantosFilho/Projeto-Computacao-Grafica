@@ -43,7 +43,6 @@ bool keys[256];  // Array para monitorar o estado das teclas
 time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem;   // Tempo de início da mensagem
-time_t ultimoTempoItem;  // tempo de spawn de item
 
 int variable = 0;
 
@@ -888,7 +887,7 @@ void spawnItem() {//  João Pedro
       item[i].type = static_cast<ItemType>(rand() % num_items);
       int chance = rand() % 100;
 
-      if (item[i].type == 0) {
+      if (item[i].type == BORRIFEX) {
         if (equipadoBorriflex || !spawnBorriflex) {
           break;
         } else {
@@ -907,7 +906,7 @@ void spawnItem() {//  João Pedro
         }
       }
 
-      if (item[i].type == 1) {
+      if (item[i].type == REPELEX) {
         if (equipadoRepelex || !spawnRepelex) {
           break;
         } else {
@@ -925,7 +924,7 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == 2) {
+      if (item[i].type == RAQUETEX) {
         if (shield.ativo || !spawnRaquetex) {
           break;
         } else {
@@ -943,7 +942,7 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == 3) {
+      if (item[i].type == KIT) {
         if (player.life < 5) {
           break;
         } else {
@@ -959,7 +958,7 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == 4) {
+      if (item[i].type == NCMTK65) {
         if (equipadoNCMTK65 || !spawnNCMTK65) {
           break;
         } else {
@@ -1201,7 +1200,6 @@ void atualizarPosicaoJogador() {
 
 void timer(int value) {//  João Pedro
   if (!isPaused) {
-    ultimoTempoItem = time(NULL);
     count_timer_loop += timerloop;
     if (count_timer_loop >= 1000) {  // Convertendo milissegundos em segundos
       count_time_game++;  // adicionando 1 segundo no contador do jogo
@@ -1220,7 +1218,7 @@ void timer(int value) {//  João Pedro
     colisao();
 
     // Spawn de item
-    if (count_time_game == 3 * aux_count_item) {  // Exemplo: a cada x segundos
+    if (count_time_game == 3 * aux_count_item) {// Exemplo: a cada x segundos
       aux_count_item++;
       spawnItem();
     }
@@ -1239,13 +1237,6 @@ void timer(int value) {//  João Pedro
     if (difftime(time(NULL), tempo_ultimo_spawn) * 1000 >= intervalo_spawn) {
       spawnMosquito();
       tempo_ultimo_spawn = time(NULL);
-    }
-
-    // Spawnando item a cada 5 segundos
-    time_t tempoAtual = time(NULL);
-    if (difftime(tempoAtual, ultimoTempoItem) >= 5) {
-      spawnItem();
-      ultimoTempoItem = tempoAtual;
     }
   }
 
