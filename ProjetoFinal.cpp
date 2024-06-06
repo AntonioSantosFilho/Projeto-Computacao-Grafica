@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "SFML\Audio.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -176,13 +177,13 @@ void escolheMensagem(int level) {//  João Pedro
     case 4:
       sprintf(
           mensagem,
-          "O nivel de Infestacao tornou-se %d\n. CUIDADO COM OS MOSQUITOES!!!",
+          "O nivel de Infestacao tornou-se %d. CUIDADO COM O AEDES AEGYPTI!!",
           level);
       break;
     case 5:
       sprintf(mensagem,
               "O nivel de Infestacao tornou-se %d\n. NENHUM REPELENTE PODE TE "
-              "AJUDAR AGORA, E SO VOCE E SUA ARMA!!",
+              "AJUDAR AGORA!!",
               level);
       break;
     default:
@@ -514,9 +515,6 @@ void desenha() {//  João Pedro
     glPopMatrix();
     glutSwapBuffers();
   }
-  
-	
-
   glFlush();
 }
 
@@ -704,6 +702,7 @@ void colisao() {//  João Pedro
             score += 15;
             equipadoRepelex = true;
             spawnRepelex = false;
+            break;
           case 2:
             shield.ativo = 1;
             equipadoRaquetex = true;
@@ -886,19 +885,18 @@ void spawnItem() {//  João Pedro
     if (!item[i].ativo) {
       item[i].type = static_cast<ItemType>(rand() % num_items);
       int chance = rand() % 100;
-
-      if (item[i].type == BORRIFEX) {
-        if (equipadoBorriflex || !spawnBorriflex) {
+        
+      if (item[i].type == 0) {
+        if (!spawnBorriflex) {
           break;
-        } else {
+        }
+		else {
           if (chance < 100) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            item[i].type = static_cast<ItemType>(
-                rand() % num_items);  // para num_items definido
+            item[i].x = rand() % 21 - rand () % 21;
+            item[i].y = rand() % 21 - rand () % 21;
+            if (item[i].x == player.tx && item[i].y == player.ty) break; // para não Spawnar o item em cima do personagem
             item[i].ativo = 1;
-            spawnBorriflex =
-                false;  // tem que arrumar pra ele poder spawnar novamente
+            spawnBorriflex = false;  // tem que arrumar pra ele poder spawnar novamente
             printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x,
                    item[i].y, item[i].type);
           }
@@ -906,15 +904,15 @@ void spawnItem() {//  João Pedro
         }
       }
 
-      if (item[i].type == REPELEX) {
+      if (item[i].type == 1) {
         if (equipadoRepelex || !spawnRepelex) {
           break;
-        } else {
-          if (chance < 40) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            item[i].type = static_cast<ItemType>(
-                rand() % num_items);  // para num_items definido
+        } 
+		else {
+          if (chance < 50) {
+            item[i].x = rand() % 21 - rand () % 21;
+            item[i].y = rand() % 21 - rand () % 21;
+            if (item[i].x == player.tx && item[i].y == player.ty) break; // para não Spawnar o item em cima do personagem
             item[i].ativo = 1;
             spawnRepelex =
                 false;  // tem que arrumar pra ele poder spawnar novamente
@@ -924,15 +922,14 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == RAQUETEX) {
+      if (item[i].type == 2) {
         if (shield.ativo || !spawnRaquetex) {
           break;
         } else {
-          if (chance < 40) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            item[i].type = static_cast<ItemType>(
-                rand() % num_items);  // para num_items definido
+          if (chance < 50) {
+            item[i].x = rand() % 21 - rand () % 21;
+            item[i].y = rand() % 21 - rand () % 21;
+            if (item[i].x == player.tx && item[i].y == player.ty) break;// para não Spawnar o item em cima do personagem
             item[i].ativo = 1;
             spawnRaquetex =
                 false;  // tem que arrumar pra ele poder spawnar novamente
@@ -942,15 +939,15 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == KIT) {
-        if (player.life < 5) {
+      if (item[i].type == 3) {
+        if (player.life > 5) {
           break;
-        } else {
+        }
+		else {
           if (chance < 50) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            item[i].type = static_cast<ItemType>(
-                rand() % num_items);  // para num_items definido
+            item[i].x = rand() % 21 - rand () % 21;
+            item[i].y = rand() % 21 - rand () % 21;
+            if (item[i].x == player.tx && item[i].y == player.ty) break;// para não Spawnar o item em cima do personagem
             item[i].ativo = 1;
             printf("Item spawnado na posição (%f, %f) do tipo %d\n", item[i].x,
                    item[i].y, item[i].type);
@@ -958,15 +955,14 @@ void spawnItem() {//  João Pedro
           break;
         }
       }
-      if (item[i].type == NCMTK65) {
+      if (item[i].type == 4) {
         if (equipadoNCMTK65 || !spawnNCMTK65) {
           break;
         } else {
           if (chance < 60) {
-            item[i].x = rand() % 12;
-            item[i].y = rand() % 12;
-            item[i].type = static_cast<ItemType>(
-                rand() % num_items);  // para num_items definido
+            item[i].x = rand() % 21 - rand () % 21;
+            item[i].y = rand() % 21 - rand () % 21;
+            if (item[i].x == player.tx && item[i].y == player.ty) break;// para não Spawnar o item em cima do personagem
             item[i].ativo = 1;
             spawnNCMTK65 =
                 false;  // tem que arrumar pra ele poder spawnar novamente
@@ -1296,8 +1292,7 @@ int main() {//  João Pedro
   glutTimerFunc(0, timeranim, 0);
 
   inicializa();
-  glutReshapeFunc(
-      AlteraTamanhoJanela);  // Registra a função AlteraTamanhoJanela
+  glutReshapeFunc(AlteraTamanhoJanela);  // Registra a função AlteraTamanhoJanela
 
   glutMainLoop();
 
