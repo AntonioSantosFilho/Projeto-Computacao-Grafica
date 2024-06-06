@@ -26,7 +26,7 @@ Nosso personagem principal é um agente de endemias! Para se defender dos mosqui
 
  `D`  = Move para direita
 
- `Mouse Right Button`  = Dispara com a arma
+ `Mouse Right Button`  = Controla o raquetex
 
  `Mouse Left Button`  = Dispara com a arma
 
