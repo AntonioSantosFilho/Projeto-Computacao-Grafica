@@ -18,38 +18,36 @@ Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de a
 
 ## Controles
 
-[ `W` ] = Move para cima
+ `W`  = Move para cima
 
-[ `S` ] = Move para baixo
+ `S`  = Move para baixo
 
-[ `A` ] = Move para esquerda
+ `A`  = Move para esquerda
 
-[ `D` ] = Move para direita
+ `D`  = Move para direita
 
-[ `Mouse Righ Button` ] = Dispara com a arma
+ `Mouse Right Button`  = Dispara com a arma
 
-[ `Mouse Left Button` ] = Dispara com a arma
+ `Mouse Left Button`  = Dispara com a arma
 
-[ `P` ] = Pausa o jogo
+ `P`  = Pausa o jogo
 
-[ `ESC` ] = Fecha o jogo
+ `ESC`  = Fecha o jogo
 
 
 
-## :hammer_and_wrench: Ferramentas utilizadas:
+##  Ferramentas utilizadas:
 
 - [ ] [Git](https://git-scm.com/downloads)
 - [ ] [Dev-C++](https://www.bloodshed.net/) 
 - [ ] [biliotecas: GLUT e stb_image ](https://www.opengl.org/resources/libraries/glut/glut_downloads.php) 
 - [ ] [Open GL ](https://opengl.org/) 
 
-### :open_file_folder: Baixar e executar
+###  Baixar e executar
 
 ```bash
 git clone https://github.com/AntonioSantosFilho/Projeto-Computacao-Grafica.git
 ```
-
-## :gear: Compilar Projeto
 
 ```bash
 basta abrir o Dev-c++ e compilar o main.cpp
