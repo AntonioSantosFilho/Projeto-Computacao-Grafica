@@ -1,4 +1,4 @@
-![Logo](https://github.com/paulohebert/aedes-attack/assets/133797775/6ef459b5-7653-44a6-b387-5a52a3bb8178)
+![Logo](https://raw.githubusercontent.com/AntonioSantosFilho/Projeto-Computacao-Grafica/main/capa_repo.png)
 
 <div align="center">
 
@@ -18,13 +18,13 @@ Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de a
 
 ## Controles
 
-[ :W: ] = Move para cima
+[ `W` ] = Move para cima
 
-[ :S: ] = Move para baixo
+[ `S` ] = Move para baixo
 
-[ :A: ] = Move para esquerda
+[ `A` ] = Move para esquerda
 
-[ :D: ] = Move para direita
+[ `D` ] = Move para direita
 
 [ `Mouse Righ Button` ] = Dispara com a arma
 
@@ -36,20 +36,24 @@ Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de a
 
 
 
-## :hammer_and_wrench: Executando o jogo
+## :hammer_and_wrench: Ferramentas utilizadas:
 
 - [ ] [Git](https://git-scm.com/downloads)
 - [ ] [Dev-C++](https://www.bloodshed.net/) 
 - [ ] [biliotecas: GLUT e stb_image ](https://www.opengl.org/resources/libraries/glut/glut_downloads.php) 
 - [ ] [Open GL ](https://opengl.org/) 
 
-### :open_file_folder: Clonar Repositório
+### :open_file_folder: Baixar e executar
 
 ```bash
 git clone https://github.com/AntonioSantosFilho/Projeto-Computacao-Grafica.git
 ```
 
 ## :gear: Compilar Projeto
+
+```bash
+basta abrir o Dev-c++ e compilar o main.cpp
+```
 
 
 
