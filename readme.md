@@ -51,17 +51,5 @@ git clone https://github.com/AntonioSantosFilho/Projeto-Computacao-Grafica.git
 
 ## :gear: Compilar Projeto
 
-```bash
-xmake
-```
 
-## :rocket: Executar Projeto
 
-```bash
-xmake run
-```
-
-## :technologist: Autores
-
-| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/142631931?v=4" width=115><br><sub>Éricles Barros</sub>](https://github.com/PsyDark00) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/140926493?v=4" width=115><br><sub>Nivaldo Guedes</sub>](https://github.com/nivaldoguedes) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/133797775?v=4" width=115><br><sub>Paulo Hebert</sub>](https://github.com/paulohebert) |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------: |
