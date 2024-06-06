@@ -55,6 +55,7 @@ int windowHeight = 600;
 
 int variable = 0;
 
+int tpicada = 2;
 
 #define NUM_TEXTURES 24
 GLuint playerTextures[NUM_TEXTURES];
@@ -83,6 +84,7 @@ typedef struct mosquito {//  João Pedro
   float dy;
   float velocidade;
   int life;
+  int type;
   int textureIndex;  // Índice da textura atual
 } Mosquito;
 
@@ -221,35 +223,36 @@ void finaliza() {//  João Pedro
 	
 //	exit(0);
 }
-
 void drawMosquito(Mosquito m) {
-  glPushMatrix();
-  glTranslatef(m.dx, m.dy, 0.0f);
+    glPushMatrix();
+    glTranslatef(m.dx, m.dy, 0.0f);
 
-  // Ativa a textura antes de vinculá-la
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, mosquitosTextures[m.textureIndex]);
+    // Ativa a textura antes de vinculá-la
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, mosquitosTextures[m.textureIndex]);
 
-  glBegin(GL_TRIANGLES);
-  glColor3f(1.0, 1.0,
-            1.0);  // Defina a cor como branca para a textura ser visível
+    glBegin(GL_QUADS);
+    glColor3f(1.0, 1.0, 1.0);  // Define a cor como branca para a textura ser visível
 
-  // Defina as coordenadas de textura para cada vértice
-  glTexCoord2f(0.0f, 0.0f);
-  glVertex2f(-tammos / 2, -tammos / 2);
+    // Defina as coordenadas de textura para cada vértice
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(-tammos / 2, -tammos / 2);
 
-  glTexCoord2f(1.0f, 0.0f);
-  glVertex2f(tammos / 2, -tammos / 2);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f(tammos / 2, -tammos / 2);
 
-  glTexCoord2f(0.5f, 1.0f);
-  glVertex2f(0.0f, tammos / 2);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex2f(tammos / 2, tammos / 2);
 
-  glEnd();
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex2f(-tammos / 2, tammos / 2);
 
-  // Desativa a textura após desenhar
-  glDisable(GL_TEXTURE_2D);
-  glPopMatrix();
-  glutSwapBuffers();
+    glEnd();
+
+    // Desativa a textura após desenhar
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
+    glutSwapBuffers();
 }
 
 void drawAllMosquitoes() {
@@ -277,15 +280,43 @@ void updateMosquitoes() {
       float angle = atan2(dy, dx) * 180.0 / M_PI;
 
       // Atualizar a textura do mosquito com base no ângulo
-      if (angle >= -45 && angle < 45) {
-        mosquitoes[i].textureIndex = (variable == 1) ? 3 : 7;  // Direita
-      } else if (angle >= 45 && angle < 135) {
-        mosquitoes[i].textureIndex = (variable == 1) ? 0 : 4;  // Frente
-      } else if (angle >= -135 && angle < -45) {
-        mosquitoes[i].textureIndex = (variable == 1) ? 1 : 5;  // Costas
-      } else {
-        mosquitoes[i].textureIndex = (variable == 1) ? 2 : 6;  // Esquerda
-      }
+	      if(mosquitoes[i].type == 0){
+		 
+	      if (angle >= -45 && angle < 45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 3 : 7;  // Direita
+	      } else if (angle >= 45 && angle < 135) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 0 : 4;  // Frente
+	      } else if (angle >= -135 && angle < -45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 1 : 5;  // Costas
+	      } else {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 2 : 6;  // Esquerda
+	      }
+	    } else if(mosquitoes[i].type == 1){
+	    	
+	    	 if (angle >= -45 && angle < 45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 14 : 15;  // Direita
+	      } else if (angle >= 45 && angle < 135) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 8 : 9;  // Frente
+	      } else if (angle >= -135 && angle < -45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 10 : 11;  // Costas
+	      } else {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 12 : 13;  // Esquerda
+	      }
+	    	
+		}else if(mosquitoes[i].type == 2){
+	    	
+	    	 if (angle >= -45 && angle < 45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 22 : 23;  // Direita
+	      } else if (angle >= 45 && angle < 135) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 16 : 17;  // Frente
+	      } else if (angle >= -135 && angle < -45) {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 18 : 19;  // Costas
+	      } else {
+	        mosquitoes[i].textureIndex = (variable == 1) ? 20 : 21;  // Esquerda
+	      }
+	    	
+		}
+	    
     }
   }
 }
@@ -730,6 +761,10 @@ void inicializa() {
 }
 
 void colisao() {//  João Pedro
+
+time_t tempoAtual = time(NULL);
+
+
   // Colisão com o Item
   for (int i = 0; i < Max_items; i++) {
     if (item[i].ativo) {
@@ -752,6 +787,9 @@ void colisao() {//  João Pedro
             score += 15;
             equipadoRepelex = true;
             spawnRepelex = false;
+            tpicada = 10;
+            ultimoTempoPicada = tempoAtual; 
+          
             break;
           case 2:
             shield.ativo = 1;
@@ -805,13 +843,14 @@ void colisao() {//  João Pedro
       }
     }
   }
-  time_t tempoAtual = time(NULL);
+  
 
   // Colisão com os mosquitos
   for (int i = 0; i < count_mosquitoes; i++) {//  João Pedro
     dist = sqrt(pow(player.tx - mosquitoes[i].dx, 2) +
                 pow(player.ty - mosquitoes[i].dy, 2));
-    if (dist < tam && difftime(tempoAtual, ultimoTempoPicada) >= 2) {
+    if (dist < tam && difftime(tempoAtual, ultimoTempoPicada) >= tpicada) {
+    	tpicada = 2;
       if (shield.ativo) {
         shield.ativo = false;  // desativa o Raquetex caso tome dano
         spawnRaquetex = true;  // Ligando o spawn do item novamente
@@ -820,8 +859,7 @@ void colisao() {//  João Pedro
       printf("Vida do jogador %d\n", player.life);
       ultimoTempoPicada = tempoAtual;  // Atualiza o tempo da última picada
       if (player.life <= 0) {
-      //	
-      
+       
         finaliza();
       }
     }
@@ -1038,10 +1076,27 @@ void spawnItem() {//  João Pedro
   }
 }
 
+void initRandom() {
+    srand(time(NULL));
+}
+
+
+int getRandomMosquitoType() {
+    float r = (float)rand() / RAND_MAX;  // Gera um número entre 0 e 1
+	
+    if (r < 0.80) {
+        return 0;  // 80% de chance
+    } else if (r < 0.995) {
+        return 1;  // 19.5% de chance
+    } else {
+        return 2;  // 0.5% de chance
+    }
+}
+
 void spawnMosquito() {//  João Pedro
   if (count_mosquitoes < Max_mosquitoes) {
    
-
+	int selected_type = getRandomMosquitoType();
     int side = rand() % 4;  // 0: top, 1: bottom, 2: left, 3: right
 
     switch (side) {
@@ -1066,10 +1121,31 @@ void spawnMosquito() {//  João Pedro
             rand() % (2 * randomy) - randomy;  // Random y within bounds
         break;
     }
- aux_count_mosquito++;
-    mosquitoes[count_mosquitoes].life = 1;
+ 
+  mosquitoes[count_mosquitoes].type = selected_type; 
+ 
+ if(mosquitoes[count_mosquitoes].type == 0){
+ 	 aux_count_mosquito++;
+ 	mosquitoes[count_mosquitoes].life = 1;
     mosquitoes[count_mosquitoes].velocidade = 0.2;
+    mosquitoes[count_mosquitoes].type = selected_type; //use selected_type para receber a logica 
     count_mosquitoes++;
+ 	
+ }else if(mosquitoes[count_mosquitoes].type == 1){
+ 	 aux_count_mosquito++;
+ 	mosquitoes[count_mosquitoes].life = 3;
+    mosquitoes[count_mosquitoes].velocidade = 0.4;
+   //use selected_type para receber a logica 
+    count_mosquitoes++;
+ 	
+ } else if(mosquitoes[count_mosquitoes].type == 2)	{
+ aux_count_mosquito++;
+ 	mosquitoes[count_mosquitoes].life = 5;
+    mosquitoes[count_mosquitoes].velocidade = 1.4;
+   
+    count_mosquitoes++;
+ 	
+}
   }
 }
 
@@ -1465,7 +1541,7 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 int main() {//  João Pedro
 
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-  
+  initRandom();
   glutInitWindowPosition(250, 100);
   glutInitWindowSize(windowWidth, windowHeight);
   glutCreateWindow("Projeto Final - Computacao Grafica\n");
