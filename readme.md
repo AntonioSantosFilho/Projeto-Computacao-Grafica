@@ -11,10 +11,10 @@
 
 </div>
 
-## :sparkles: Objetivo
+## História
 A dengue é uma praga muito perigosa, ao longo dos anos ela pode evoluir, mas e se elas evoluíssem de uma forma assombrosa? Nesse mundo elas evoluíram tanto, que se tornaram monstros poderosíssimos.
 
-Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de armas poderosas para combater o mosquito Aedes aegypti. 
+Nosso personagem principal é um agente de endemias! Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de armas poderosas para combater o mosquito Aedes aegypti. 
 
 ## Controles
 
