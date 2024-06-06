@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "SFML\Audio.hpp"
+#include <MMSystem.h>
+#include <iostream>
+
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -12,7 +14,9 @@
 #define Max_items 7  // quantidade maxima de itens que pode estar ao mesmo tempo no jogo
 #define Max_mosquitoes 100
 #define Max_shots 30  // Defina um número máximo para os tiros
-#define timerloop 30  // definindo o tempo de chamada de timer a cada x milisegundos
+#define timerloop 25  // definindo o tempo de chamada de timer a cada x milisegundos
+
+#define num_map 11
 
 int win = 25, count_timer_loop = 0, count_message = 0, count_current_weapon,
     count_current_item;
@@ -45,15 +49,29 @@ time_t ultimoTempoPicada;
 time_t tempo_ultimo_spawn;
 time_t tempo_mensagem;   // Tempo de início da mensagem
 
+// Tamanho da janela Antonio
+int windowWidth = 840;
+int windowHeight = 600;
+
 int variable = 0;
 
-bool isPaused = false;
 
 #define NUM_TEXTURES 24
 GLuint playerTextures[NUM_TEXTURES];
 GLuint EfectTextures[NUM_TEXTURES];
-GLuint mapa;
 int currentTextureIndex = 0;
+
+GLuint mapa[num_map];
+
+int screen_now = 1;
+bool estaNoMenu =  true;
+bool isPaused = true;
+int isFinalizado = 0;
+
+bool onInstrucao = false;
+bool onItens = false;
+bool onCreditos = false;
+int tela_item = 1;
 
 int mostrar_mensagem = 0;  // Flag para indicar se a mensagem deve ser mostrada
 
@@ -113,7 +131,7 @@ Shot shots[Max_shots];
 // Inicializa o escudo com um ângulo de 0, raio de 3.0, e inativo
 Shield shield = {0, 6.0, 0};
 // Definindo o jogador
-Player player = {0, 0, 0.5, 5, 0, false, DEFAULT, 0, 0};
+Player player = {0, 0, 0.5, 4, 0, false, DEFAULT, 0, 0};
 
 void desenharCoracao(float x, float y, float tamanho) {//  João Pedro
   int i;
@@ -196,8 +214,12 @@ void desativarMensagem(int value) {//  João Pedro
   glutPostRedisplay();
 }
 void finaliza() {//  João Pedro
-  printf("Seu Score foi : %d\n", score);
-  exit(0);
+	isFinalizado = 1;
+	screen_now = 4;
+	isPaused = true;	
+	printf("Seu Score foi : %d\n", score);
+	
+//	exit(0);
 }
 
 void drawMosquito(Mosquito m) {
@@ -269,10 +291,15 @@ void updateMosquitoes() {
 }
 
 
+void menuInicial(){
+	
+}
+
+
 void desenhaMapa() {
    glPushMatrix();
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, mapa);
+  glBindTexture(GL_TEXTURE_2D, mapa[screen_now]);
   glBegin(GL_QUADS);
   glColor3f(1.0, 1.0, 1.0);
 
@@ -291,11 +318,20 @@ void desenhaMapa() {
   glEnd();
   glDisable(GL_TEXTURE_2D);
   glPopMatrix();
+  
 }
 
+
 void desenha() {//  João Pedro
+
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
+   
+	desenhaMapa();
 	
-  glClear(GL_COLOR_BUFFER_BIT);
+
+if(!isPaused){
 
   char scoreText[20];
   sprintf(scoreText, "Score : %d", score);
@@ -308,12 +344,8 @@ void desenha() {//  João Pedro
 
   escolheMensagem(level);
  
+ 
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  
-  glClear(GL_COLOR_BUFFER_BIT);
- desenhaMapa();
   // Angelo - Player
   glPushMatrix();
   glTranslatef(player.tx, player.ty, 0.0f);
@@ -367,8 +399,7 @@ void desenha() {//  João Pedro
     }
   }
 
-  drawAllMosquitoes();
-
+ drawAllMosquitoes();
   // Desenha item
   for (int i = 0; i < Max_items; i++) {
     if (item[i].ativo) {
@@ -421,6 +452,7 @@ void desenha() {//  João Pedro
       glutSwapBuffers();
     }
     
+    
     // Item - RAQUETEX
     if (shield.ativo) {
       glPushMatrix();
@@ -454,28 +486,28 @@ void desenha() {//  João Pedro
   }
 
   for (int i = 0; i < player.life; i++) {
-    desenharCoracao(-n + i * 2.5f, m + 2.0f, 1.0f);
+    desenharCoracao((-n+3) + i * 3.5f, m - 4.5f, 1.0f);
   }
 
   // Desenhando o Score na tela
   glPushMatrix();
   glColor3f(0.0, 0.0, 0.0);
-  glRasterPos2f(-n + 25, m + 3.0f);  // Posição do score na tela
+  glRasterPos2f(-n + 25, m - 3.0f);  // Posição do score na tela
   desenhaTexto(GLUT_BITMAP_HELVETICA_18, scoreText);
   glPopMatrix();
 
   // Desenhando o Timer na tela
   glPushMatrix();
   glColor3f(0.0, 0.0, 0.0);
-  glRasterPos2f(-n + 50, m + 1.5f);  // Posição do timer na tela
+  glRasterPos2f(-n + 40, m - 3.5f);  // Posição do timer na tela
   desenhaTimer(GLUT_BITMAP_HELVETICA_18, time_gameText);
   glPopMatrix();
 
   // Desenhando a mensagem
   if (level >= 0 && count_message) {
     glPushMatrix();
-    glColor3f(1.0, 0.0, 0.0);
-    glRasterPos2f(-n + 3, m);
+    glColor3f(0.0, 0.0, 0.0);
+    glRasterPos2f(-n + 5, m-10);
     desenhaMensagem(GLUT_BITMAP_HELVETICA_18, mensagem);
 
     glutTimerFunc(5000, desativarMensagem, 0);
@@ -485,13 +517,13 @@ void desenha() {//  João Pedro
   if (count_current_weapon) {
     glPushMatrix();
     glColor3f(0.0, 0.0, 0.0);
-    glRasterPos2f(-25, -23);  // Posição da informacao da arma
+    glRasterPos2f(-23, -18);  // Posição da informacao da arma
     desenhaInfo(GLUT_BITMAP_HELVETICA_18, infoAMMO);
     glPopMatrix();
 
     // Desenhando a arma na parte inferior esquerda
     glPushMatrix();
-    glTranslatef(-28, -23, 0.0f);
+    glTranslatef(-25, -17.5, 0.0f);
     glEnable(GL_TEXTURE_2D);  // Habilitar texturas
     glBindTexture(GL_TEXTURE_2D,
                   ItensTexture[count_current_item]);  // Bind a textura
@@ -515,6 +547,9 @@ void desenha() {//  João Pedro
     glPopMatrix();
     glutSwapBuffers();
   }
+  }
+
+  glutSwapBuffers();
   glFlush();
 }
 
@@ -550,6 +585,7 @@ void atualizarPosicaoEscudo() {
 void inicializa() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
   //=====================================================================================================
   carregarTextura("AngeloSprite/Andando pra Frente - Movendo.png",
                   &playerTextures[0]);
@@ -667,7 +703,21 @@ void inicializa() {
   //=====================================================================================================
   carregarTextura("itens/Efeitos/Fogo do lancachamas.png", &EfectTextures[0]);
   //=====================================================================================================
-  carregarTextura("mapa/mapa.png", &mapa);
+ 
+  carregarTextura("mapa/mapa.png", &mapa[0]);
+  carregarTextura("telas/inicial.png", &mapa[1]);
+  carregarTextura("telas/instrucao.png", &mapa[2]);
+  carregarTextura("telas/pause.png", &mapa[3]);
+  carregarTextura("telas/fim.png", &mapa[4]);
+  
+  carregarTextura("telas/item1.png", &mapa[5]);
+  carregarTextura("telas/item2.png", &mapa[6]);
+  carregarTextura("telas/item3.png", &mapa[7]);
+  carregarTextura("telas/item4.png", &mapa[8]);
+  carregarTextura("telas/item5.png", &mapa[9]);
+  
+  carregarTextura("telas/creditos.png", &mapa[10]);
+  
   //=====================================================================================================
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -769,7 +819,9 @@ void colisao() {//  João Pedro
       player.life--;
       printf("Vida do jogador %d\n", player.life);
       ultimoTempoPicada = tempoAtual;  // Atualiza o tempo da última picada
-      if (player.life == 0) {
+      if (player.life <= 0) {
+      //	
+      
         finaliza();
       }
     }
@@ -805,6 +857,7 @@ void colisao() {//  João Pedro
 		}
 		else if (player.currentShotType == CHAMA){
 			if (dist < 2*tam) {
+				
           		mosquitoes[i].life--;
           	if (mosquitoes[i].life == 0) {
             	score += 50;
@@ -863,6 +916,8 @@ void atirar(int mouseX, int mouseY) {
 }
 
 void mouse(int button, int state, int x, int y) {
+	if(!isPaused){
+	
   if (button == GLUT_RIGHT_BUTTON) {
     if (state == GLUT_DOWN) {
       escudoGirando = true;  // Inicia a rotação do escudo
@@ -876,9 +931,16 @@ void mouse(int button, int state, int x, int y) {
     if (player.armado == true) {
       if (player.currentAmmo < 1) {
       } else
-        atirar(x, y);
+      	if(player.currentShotType == CHAMA){
+      		PlaySound (TEXT("musica/fogareu.wav"), NULL, SND_ASYNC); 
+			  atirar(x, y);
+		  } else{
+		  	PlaySound (TEXT("musica/borrifada.wav"), NULL, SND_ASYNC); 
+			  atirar(x, y);
+		  }
     }
   }
+}
 }
 void spawnItem() {//  João Pedro
   for (int i = 0; i < Max_items; i++) {
@@ -978,7 +1040,7 @@ void spawnItem() {//  João Pedro
 
 void spawnMosquito() {//  João Pedro
   if (count_mosquitoes < Max_mosquitoes) {
-    aux_count_mosquito++;
+   
 
     int side = rand() % 4;  // 0: top, 1: bottom, 2: left, 3: right
 
@@ -1004,12 +1066,13 @@ void spawnMosquito() {//  João Pedro
             rand() % (2 * randomy) - randomy;  // Random y within bounds
         break;
     }
-
+ aux_count_mosquito++;
     mosquitoes[count_mosquitoes].life = 1;
     mosquitoes[count_mosquitoes].velocidade = 0.2;
     count_mosquitoes++;
   }
 }
+
 void moverTiros() {
   for (int i = 0; i < Max_shots; i++) {
     if (shots[i].ativo) {
@@ -1028,6 +1091,8 @@ void moverTiros() {
     }
   }
 }
+
+
 
 void checarColisaoEntreMosquitos() {
   for (int i = 0; i < count_mosquitoes; i++) {
@@ -1052,15 +1117,115 @@ void checarColisaoEntreMosquitos() {
     }
   }
 }
-
 void teclado(unsigned char key, int x, int y) {
   switch (key) {
+    case '\r':  // Caso da tecla Enter
+      if (estaNoMenu) {
+        isPaused = !isPaused;
+        estaNoMenu = false;
+        screen_now = 0;
+         PlaySound(NULL, 0, 0);
+        printf("Saiu do menu: %s\n", isPaused ? "true" : "false");
+      }
+      break;
+
     case 'p':
-      isPaused = !isPaused;
-      printf("isPaused: %s\n", isPaused ? "true" : "false");
+      
+     if(isFinalizado== 1) break;
+	 
+        isPaused = !isPaused;
+        isPaused ? screen_now = 3 : screen_now = 0;
+        printf("isPaused: %s\n", isPaused ? "true" : "false");
+      
+
+      break;
+      
+       case 'i':
+       	
+      if (estaNoMenu) {
+      	tela_item = 1;
+      	onItens = true;
+      	screen_now = 5;
+      	
+}
+        break;
+        
+        case 'c':
+       	onInstrucao = true;
+    screen_now = 2;
+        break;
+      
+      case 27:
+      	  if (estaNoMenu) {
+      	onCreditos = true;
+      	screen_now = 10;
+      	
+}else
+      	exit(0);
+    	break;
+
+    default: 
       break;
   }
-  keys[key] = true;  // Marca a tecla como pressionada
+  keys[key] = true; 
+  // Marca a tecla como pressionada
+}
+
+
+
+void teclasEspeciais(int key, int x, int y) {
+  switch (key) {
+    case GLUT_KEY_PAGE_UP:
+      
+      if(estaNoMenu && onItens){
+      	if(tela_item == 5) break;
+      	tela_item++;
+      	screen_now = tela_item+4;
+      	printf("%d", tela_item); 
+      
+      	
+	  }
+      
+      break;
+      
+    case GLUT_KEY_PAGE_DOWN:
+    
+    if(onCreditos){
+    	onCreditos = false;
+    	screen_now = 1;
+	}
+	
+	 if(onInstrucao){
+    	onInstrucao = false;
+    	screen_now = 1;
+	}
+    
+    if(onItens)
+	{    	
+    	if(tela_item == 1)
+		{
+	    	screen_now = 1;
+	    	onItens = false;
+		}else{
+	
+	   		tela_item--;
+	      	screen_now = tela_item+4;
+	      	printf("%d", tela_item); 
+		}
+	}
+      	
+      
+      	
+
+    
+      break;
+       case GLUT_KEY_END:
+      printf("End pressed\n");
+     screen_now = 10;
+      break;
+    default:
+      break;
+  }
 }
 
 void tecladoUp(unsigned char key, int x, int y) {
@@ -1069,6 +1234,7 @@ void tecladoUp(unsigned char key, int x, int y) {
 
 void atualizarPosicaoJogador() {
   if (keys['a']) {
+  	
     if (player.tx > -n) player.tx -= player.velocidade;
     if (equipadoBorriflex || equipadoNCMTK65) {
       if (equipadoBorriflex) {
@@ -1195,14 +1361,16 @@ void atualizarPosicaoJogador() {
 }
 
 void timer(int value) {//  João Pedro
+
   if (!isPaused) {
     count_timer_loop += timerloop;
     if (count_timer_loop >= 1000) {  // Convertendo milissegundos em segundos
       count_time_game++;  // adicionando 1 segundo no contador do jogo
       count_timer_loop = 0;
     }
-    // Desenha todos os mosquitos    drawAllMosquitoes();
-    updateMosquitoes();
+    // Desenha todos os mosquitos    
+	
+    
 
     checarColisaoEntreMosquitos();
     moverTiros();               // Atualiza a posição dos tiros
@@ -1244,15 +1412,24 @@ void timer(int value) {//  João Pedro
 void timeranim(int value) {
   // Alterar o valor da variável
   variable = !variable;
+  
+   updateMosquitoes();
 
   // Redesenha a cena
   glutPostRedisplay();
 
   // Define o temporizador novamente
-  glutTimerFunc(180, timeranim, 0);
+  glutTimerFunc(60, timeranim, 0);
 }
 
-void AlteraTamanhoJanela(GLsizei w, GLsizei h)//  João Pedro
+void timerup(int value) {
+  
+ 
+  // Define o temporizador novamente
+  glutTimerFunc(10, timerup, 0);
+}
+
+void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 {
     GLsizei largura, altura;
 
@@ -1266,34 +1443,46 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)//  João Pedro
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
+    GLfloat fatorAumento = 0.8f;  // 10% a mais
+
     if (largura <= altura) 
     { 
-        gluOrtho2D(-25.0f, 25.0f, -25.0f * altura / largura, 25.0f * altura / largura);
-        win = 45.0f;
+        gluOrtho2D(-25.0f * fatorAumento, 25.0f * fatorAumento, 
+                   -25.0f * altura / largura * fatorAumento, 
+                    25.0f * altura / largura * fatorAumento);
+        win = 45.0f * fatorAumento;
     }              
     else 
     {
-        gluOrtho2D(-25.0f * largura / altura, 25.0f * largura / altura, -25.0f, 25.0f);
-        win = 45.0f * largura / altura;           
+        gluOrtho2D(-25.0f * largura / altura * fatorAumento, 
+                    25.0f * largura / altura * fatorAumento, 
+                   -25.0f * fatorAumento, 
+                    25.0f * fatorAumento);
+        win = 45.0f * largura / altura * fatorAumento;           
     }
 }
 
 int main() {//  João Pedro
-  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 
-  glutInitWindowPosition(0, 0);
-  glutInitWindowSize(900, 700);
+  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+  
+  glutInitWindowPosition(250, 100);
+  glutInitWindowSize(windowWidth, windowHeight);
   glutCreateWindow("Projeto Final - Computacao Grafica\n");
   glutMouseFunc(mouse);
   glutKeyboardFunc(teclado);
+  glutSpecialFunc(teclasEspeciais);
   glutKeyboardUpFunc(tecladoUp);  // Registra o callback para quando a tecla é solta
   glutDisplayFunc(desenha);
+  glutReshapeFunc(AlteraTamanhoJanela);
   glutTimerFunc(50, timer, 0);  // Chama a função de timer a cada 50ms
   glutTimerFunc(0, timeranim, 0);
-
+if(estaNoMenu) PlaySound (TEXT("musica/start.wav"), NULL, SND_ASYNC); else{
+}
   inicializa();
-  glutReshapeFunc(AlteraTamanhoJanela);  // Registra a função AlteraTamanhoJanela
-
+  
+	
+	glutTimerFunc(0, timerup, 0);
   glutMainLoop();
 
   return 0;
