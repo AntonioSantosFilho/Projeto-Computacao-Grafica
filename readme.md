@@ -39,11 +39,11 @@ Nosso personagem principal é um agente de endemias! Para se defender dos mosqui
 
 
  ## Assista a Gameplay
-<center>
+<div style="text-align: center;">
     <a href="https://www.youtube.com/watch?v=4JOX6E-RLuo" target="_blank">
         <img src="https://i.ibb.co/D7qF3Ct/Tela-inicio.png" alt="Dengue Force Defense" width="400" height="auto">
     </a>
-</center>
+</div>
 
 
 ##  Ferramentas utilizadas:
