@@ -38,12 +38,11 @@ Nosso personagem principal é um agente de endemias! Para se defender dos mosqui
  `ESC`  = Fecha o jogo
 
 
- ## Gameplay
+ ## Assista a Gameplay
 
 <center>
 
 [![Dengue Force Defense](https://i.ibb.co/D7qF3Ct/Tela-inicio.png)](https://www.youtube.com/watch?v=4JOX6E-RLuo)
-
 
 </center>
 
