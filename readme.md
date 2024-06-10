@@ -16,6 +16,9 @@ A dengue é uma praga muito perigosa, ao longo dos anos ela pode evoluir, mas e 
 
 Nosso personagem principal é um agente de endemias! Para se defender dos mosquitos da dengue nosso personagem conta com a ajuda de armas poderosas para combater o mosquito Aedes aegypti. 
 
+
+
+
 ## Controles
 
  `W`  = Move para cima
@@ -33,6 +36,12 @@ Nosso personagem principal é um agente de endemias! Para se defender dos mosqui
  `P`  = Pausa o jogo
 
  `ESC`  = Fecha o jogo
+
+
+ ## Gameplay
+
+ [![Dengue Force Defense](https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg)](https://www.youtube.com/watch?v=4JOX6E-RLuo)
+
 
 
 
