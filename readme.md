@@ -40,7 +40,13 @@ Nosso personagem principal é um agente de endemias! Para se defender dos mosqui
 
  ## Gameplay
 
- [![Dengue Force Defense](https://raw.githubusercontent.com/AntonioSantosFilho/Projeto-Computacao-Grafica/main/capa_repo.png)](https://www.youtube.com/watch?v=4JOX6E-RLuo)
+<center>
+
+[![Dengue Force Defense](https://i.ibb.co/Bg1J8Zt/Tela-inicio.png)](https://www.youtube.com/watch?v=4JOX6E-RLuo)
+<a href="https://ibb.co/Bg1J8Zt"><img src="https://i.ibb.co/Bg1J8Zt/Tela-inicio.png" alt="Tela-inicio" border="0"></a>
+
+
+</center>
 
 
 
